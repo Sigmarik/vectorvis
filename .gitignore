@@ -1,0 +1,10 @@
+*.log
+*.out
+*.o
+build/*
+log/*
+logs/*
+run/*
+.vscode/*
+dev_docs/*
+scripts
