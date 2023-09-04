@@ -46,6 +46,7 @@ BUILD_ERRLOG_FNAME = latest_build_err.log
 
 LIB_OBJECTS = lib/logger/debug.o		\
 			  lib/logger/logger.o		\
+			  lib/geometry/vector.o		\
 			  lib/hash/murmur.o
 
 MAIN_NAME = main
@@ -56,6 +57,7 @@ MAIN_MAIN = src/main.cpp
 MAIN_OBJECTS = $(LIB_OBJECTS)	\
 	src/utils/main_utils.o		\
 	src/utils/common_utils.o	\
+	src/windows/window.o		\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
@@ -96,11 +98,13 @@ asset:
 
 %.o: %.cpp
 	@echo Building file $^
+	@mkdir -p $(LOGS_FOLDER)
 	@$(CC) $(CPPFLAGS) -c $^ -o $@ > $(BUILD_LOG_NAME)
 
 LST_NAME = asm_listing.log
 %.o: %.s
 	@echo Building assembly file $^
+	@mkdir -p $(LOGS_FOLDER)
 	@nasm -f elf64 -l $(LST_NAME) $^ -o $@ > $(BUILD_LOG_NAME)
 
 clean:
