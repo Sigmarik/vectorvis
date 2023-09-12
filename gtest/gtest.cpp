@@ -11,4 +11,7 @@
 
 #include <gtest/gtest.h>
 
+// clang-format off
 #include "vector_tests.hpp"
+#include "stack_tests.hpp"
+// clang-format on

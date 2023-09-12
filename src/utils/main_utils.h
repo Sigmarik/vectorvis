@@ -13,11 +13,21 @@
 #define MAIN_UTILS_H
 
 #include "common_utils.h"
+#include "geometry/matrix.h"
 
 /**
  * @brief Print the label of the program
  *
  */
 void print_label();
+
+/**
+ * @brief Calculate screen matrix by resolution
+ *
+ * @param size_x
+ * @param size_y
+ * @return Mat33d
+ */
+Mat33d get_screen_matrix(unsigned size_x, unsigned size_y);
 
 #endif

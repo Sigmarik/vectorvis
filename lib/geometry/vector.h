@@ -18,12 +18,9 @@ struct Vec2d {
     Vec2d();
     Vec2d(double azimuth);
     Vec2d(double x, double y);
-    Vec2d(const Vec2d& vector);
     ~Vec2d();
 
     static Vec2d radial(double angle, double arm = 1.0);
-
-    Vec2d& operator=(const Vec2d& vector);
 
     Vec2d operator+(const Vec2d& vector) const;
     Vec2d operator-(const Vec2d& vector) const;
@@ -31,17 +28,14 @@ struct Vec2d {
     Vec2d operator*(double scalar) const;
     Vec2d operator/(double scalar) const;
 
-    Vec2d& operator+=(const Vec2d& vector);
-    Vec2d& operator-=(const Vec2d& vector);
-    Vec2d& operator*=(double scalar);
-    Vec2d& operator/=(double scalar);
+    void operator+=(const Vec2d& vector);
+    void operator-=(const Vec2d& vector);
+    void operator*=(double scalar);
+    void operator/=(double scalar);
 
     bool operator==(Vec2d vector) const;
 
     Vec2d normalize(double threshold = DEFAULT_VECTOR_THRESHOLD) const;
-
-    double dot(const Vec2d& vector) const;
-    double cross(const Vec2d& vector) const;
 
     double length() const;
     double length2() const;
@@ -67,6 +61,49 @@ struct Vec2d {
     double x_, y_;
 };
 
+double dot(const Vec2d& alpha, const Vec2d& beta);
+double cross(const Vec2d& alpha, const Vec2d& beta);
+
+struct Vec3d {
+    explicit Vec3d();
+    explicit Vec3d(double x, double y, double z);
+    ~Vec3d();
+
+    Vec3d operator+(const Vec3d& vector) const;
+    Vec3d operator-(const Vec3d& vector) const;
+    Vec3d operator*(const Vec3d& vector) const;
+    Vec3d operator*(double scalar) const;
+    Vec3d operator/(double scalar) const;
+    Vec3d operator-() const;
+
+    void operator+=(const Vec3d& vector);
+    void operator-=(const Vec3d& vector);
+    void operator*=(const Vec3d& vector);
+    void operator*=(double scalar);
+    void operator/=(double scalar);
+
+    double length() const;
+    double length2() const;
+
+    Vec3d normalize(double threshold = DEFAULT_VECTOR_THRESHOLD) const;
+
+    double get_x() const;
+    double get_y() const;
+    double get_z() const;
+
+    void set_x(double x);
+    void set_y(double y);
+    void set_z(double z);
+
+   private:
+    double x_, y_, z_;
+};
+
+double dot(const Vec3d& alpha, const Vec3d& beta);
+Vec3d cross(const Vec3d& alpha, const Vec3d& beta);
+
 typedef Vec2d Point;
+
+// #include "vector.hpp"
 
 #endif

@@ -43,9 +43,9 @@ error_t parse(int key, char* arg, struct argp_state* state) {
             if (state->arg_num == 0) options->set_input_name(arg);
             break;
         case ARGP_KEY_END:
-            if (state->arg_num == 0) {
+            if (state->arg_num > 0) {
                 log_dup(ERROR_REPORTS, "error",
-                        "Input file path was not specified.\n");
+                        "Unrecognized command line arguments encountered.\n");
                 errno = ENODATA;
                 return ARGP_ERR_UNKNOWN;
             }

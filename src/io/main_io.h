@@ -16,7 +16,7 @@
 
 #include "src/config.h"
 
-static const char ARGS_DOC[] = "INPUT_FILE_NAME";
+static const char ARGS_DOC[] = "";
 
 enum OptCodeKey {
     _OPT_CUSTOM_KEYS_SHIFT = 500,
@@ -24,9 +24,7 @@ enum OptCodeKey {
 };
 
 static const argp_option PARSER_OPTIONS[] = {
-    {"owl", OPT_OWL, NULL, 0, "Lets the owls out"},
-    {"output", 'o', "OUTPUT_FILE", 0, "Output file path"},
-    {}  // <-- NULL-terminator
+    {"owl", OPT_OWL, NULL, 0, "Lets the owls out"}, {}  // <-- NULL-terminator
 };
 
 struct Options {

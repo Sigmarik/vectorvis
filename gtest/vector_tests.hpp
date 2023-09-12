@@ -65,8 +65,8 @@ TEST(Vector2d, Characteristics) {
 
     EXPECT_EQ(Vec2d::radial(M_PI, 0.5).angle(Vec2d::radial(M_PI / 2.0, 0.1)),
               -M_PI / 2.0);
-    EXPECT_EQ(Vec2d(1.0, 1.0).dot(Vec2d(1.0, 2.0)), 3.0);
-    EXPECT_EQ(Vec2d(1.0, 2.0).cross(Vec2d(3.0, 4.0)), -2.0);
+    EXPECT_EQ(dot(Vec2d(1.0, 1.0), Vec2d(1.0, 2.0)), 3.0);
+    EXPECT_EQ(cross(Vec2d(1.0, 2.0), Vec2d(3.0, 4.0)), -2.0);
 }
 
 TEST(Vector2d, Transforms) {
