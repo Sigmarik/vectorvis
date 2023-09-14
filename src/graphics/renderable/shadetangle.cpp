@@ -50,7 +50,8 @@ Shadetangle& Shadetangle::operator=(const Shadetangle& shadetangle) {
     return *this;
 }
 
-void Shadetangle::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target) {
+void Shadetangle::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
+                         const AssetShelf& assets) {
     static sf::Vertex vertices[4];
 
     texture_.setSmooth(true);

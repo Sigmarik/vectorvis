@@ -8,52 +8,9 @@
 
 static const unsigned LD_RESOLUTION = 1024;
 
+// TODO: Get rid of global variables (scene manager?)
 static unsigned Iteration = 1;
 static double LightData[(LD_RESOLUTION + 1) * (LD_RESOLUTION + 1) * 3] = {};
-
-static const PointLight LIGHTS[] = {
-    (PointLight){.position = Vec3d(0.0, 5.6, 10.0),
-                 .color = Color(1.0, 1.0, 1.0) * 10.0},
-    (PointLight){.position = Vec3d(5.0, -5.0, 15.0),
-                 .color = Color(1.0, 0.1, 0.1) * 5.0}};
-
-static const Sphere SPHERES[] = {
-    Sphere(
-        Vec3d(0.0, 0.0, 10.0), 2.0,
-        (Material){
-            .color = Vec3d(0.9, 0.9, 0.9), .roughness = 0.1, .specular = 1.0}),
-    Sphere(Vec3d(-3.0, -3.0, 13.0), 2.0,
-           (Material){.color = Vec3d(0.8, 0.8, 0.86),
-                      .roughness = 0.01,
-                      .specular = 1.0,
-                      .mirror = true})};
-
-static const Plane PLANES[] = {
-    Plane(
-        Vec3d(0.0, 6.0, 10.0), Vec3d(0.0, -1.0, 0.0),
-        (Material){
-            .color = Vec3d(1.0, 1.0, 1.0), .roughness = 0.1, .specular = 1.0}),
-    Plane(
-        Vec3d(0.0, -6.0, 10.0), Vec3d(0.0, 1.0, 0.0),
-        (Material){
-            .color = Vec3d(1.0, 1.0, 1.0), .roughness = 0.1, .specular = 1.0}),
-    Plane(
-        Vec3d(0.0, 0.0, 16.0), Vec3d(0.0, 0.0, -1.0),
-        (Material){
-            .color = Vec3d(1.0, 1.0, 1.0), .roughness = 0.1, .specular = 0.0}),
-    Plane(
-        Vec3d(-6.0, 0.0, 10.0), Vec3d(1.0, 0.0, 0.0),
-        (Material){
-            .color = Vec3d(1.0, 0.1, 0.1), .roughness = 0.1, .specular = 1.0}),
-    Plane(
-        Vec3d(6.0, 0.0, 10.0), Vec3d(-1.0, 0.0, 0.0),
-        (Material){
-            .color = Vec3d(0.1, 1.0, 0.1), .roughness = 0.1, .specular = 1.0}),
-    Plane(
-        Vec3d(0.0, 0.0, -1.0), Vec3d(0.0, 0.0, 1.0),
-        (Material){
-            .color = Vec3d(0.1, 0.1, 1.0), .roughness = 0.1, .specular = 1.0}),
-};
 
 #define LEN(array) (sizeof(array) / sizeof(*array))
 
@@ -89,26 +46,27 @@ static HitResult trace(const Vec3d& start, const Vec3d& direction) {
     return hit;
 }
 
-static const double SKY_BRIGHTNESS = 0.5;
+static const double SKY_BRIGHTNESS = 0.27;
 static const Color SKY_LIGHT(0.9 * SKY_BRIGHTNESS, 1.0 * SKY_BRIGHTNESS,
                              1.0 * SKY_BRIGHTNESS);
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
+// TODO:
 static double brdf(const Vec3d& light, const Vec3d& normal, const Vec3d& eye,
                    const Material& material) {
     Vec3d bisector = -(light + eye).normalize();
     double diffuse = MAX(0.0, dot(-light, normal));
     double specular =
         pow(MAX(0.0, dot(bisector, normal)), 1.0 / material.roughness);
-    return diffuse + specular * material.specular;
+    return specular * material.specular + diffuse;
 }
 
 static const unsigned SUBRAY_COUNT = 1;
 
 static double rand_double() {
-    double source = sin(rand());
+    double source = sin(rand()) * 1024.0;
     return source - floor(source);
 }
 
@@ -120,7 +78,7 @@ static Color measure(Vec3d start, Vec3d direction, unsigned depth = 1) {
     }
 
     if (hit.material.mirror && depth > 0) {
-        return measure(hit.position + hit.normal * 0.01,
+        return measure(hit.position + hit.normal * 0.001,
                        direction - hit.normal * dot(direction, hit.normal) *
                                        2.0 / hit.normal.length2(),
                        depth - 1) *
@@ -133,7 +91,9 @@ static Color measure(Vec3d start, Vec3d direction, unsigned depth = 1) {
         PointLight light = LIGHTS[light_id];
         Vec3d light_vector = (hit.position - light.position).normalize();
 
-        if (dot(hit.normal, -light_vector) < 0.0) continue;
+        if (dot(hit.normal, -light_vector) < 0.0) {
+            continue;
+        }
 
         HitResult obstruct =
             trace(hit.position + hit.normal * 0.01, -light_vector);
@@ -171,12 +131,17 @@ static Color measure(Vec3d start, Vec3d direction, unsigned depth = 1) {
     return result;
 }
 
+static unsigned IterationUpdateIndex = (unsigned)-1;
+
 SHADER(rt_example) {
     unsigned ld_x = (unsigned)((0.5 + 0.5 * uv.get_x()) * LD_RESOLUTION);
     unsigned ld_y = (unsigned)((0.5 + 0.5 * uv.get_y()) * LD_RESOLUTION);
     unsigned ld_id = (ld_y * LD_RESOLUTION + ld_x) * 3;
 
-    if (ld_x <= 5 && ld_y <= 5) ++Iteration;
+    if (ld_id < IterationUpdateIndex)
+        IterationUpdateIndex = ld_id;
+    else if (ld_id == IterationUpdateIndex)
+        ++Iteration;
 
     if (Iteration == 1) {
         LightData[ld_id + 0] = 0.0;
@@ -195,7 +160,7 @@ SHADER(rt_example) {
 
     Color prev_color =
         Color(LightData[ld_id + 0], LightData[ld_id + 1], LightData[ld_id + 2]);
-    Color color = measure(start, ray, 2);
+    Color color = measure(start, ray, 0);
 
     color.set_x(smoothstep(MIN(1.0, color.get_x())));
     color.set_y(smoothstep(MIN(1.0, color.get_y())));

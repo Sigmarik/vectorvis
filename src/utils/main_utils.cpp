@@ -19,3 +19,9 @@ Mat33d get_screen_matrix(unsigned size_x, unsigned size_y) {
                   0.0, 0.0, 1.0);
     // clang-format on
 }
+
+AssetShelf load_assets() {
+    AssetShelf shelf = {};
+    shelf.font.loadFromFile("assets/Ubuntu-L.ttf");
+    return shelf;
+}

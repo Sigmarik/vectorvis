@@ -29,7 +29,7 @@ struct Shadetangle : public Renderable {
 
     Shadetangle& operator=(const Shadetangle& shadetangle);
 
-    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target) override;
+    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target, const AssetShelf& assets) override;
 
     shader_t* get_shader() const;
     Vec2d get_center() const;

@@ -12,7 +12,8 @@
 #ifndef RAY_TRACING_H
 #define RAY_TRACING_H
 
-#include "geometry/vector.h"
+#include "data_structures/stack.h"
+#include "geometry/vector.hpp"
 
 typedef Vec3d Color;
 
@@ -64,6 +65,25 @@ struct Plane final : public Shape {
    private:
     Vec3d center_;
     Vec3d normal_;
+};
+
+struct Camera final {
+    Vec3d position;
+    Vec3d forward = Vec3d(0.0, 0.0, 1.0);
+    Vec3d right = Vec3d(1.0, 0.0, 0.0);
+    Vec3d up = Vec3d(0.0, 1.0, 0.0);
+};
+
+struct Scene {
+    HitResult trace(const Vec3d& start, const Vec3d& direction) const;
+    Color measure(const Vec3d& start, const Vec3d& direction,
+                  unsigned depth) const;
+
+    Stack<PointLight> lights;
+    Stack<Sphere> spheres;
+    Stack<Plane> planes;
+
+    Camera camera = {};
 };
 
 double smoothstep(double parameter);

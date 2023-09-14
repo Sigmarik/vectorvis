@@ -19,7 +19,8 @@ struct Arrow : public Renderable {
     explicit Arrow(const Vec2d& vector);
     ~Arrow();
 
-    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target) override;
+    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
+                const AssetShelf& assets) override;
 
     Vec2d get_vector();
     void set_vector(const Vec2d& vector);

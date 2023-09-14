@@ -2,7 +2,7 @@ PYTHON = python3
 CC = g++
 PROFILER = valgrind
 
-CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O1 -pie -pthread					\
+CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -Ofast -pie -pthread				\
 -Wall -Wextra -Weffc++				 	 											\
 -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations				\
 -Wcast-align -Wchar-subscripts -Wconditionally-supported							\
@@ -11,11 +11,11 @@ CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O1 -pie -pthread					\
 -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual -Wpacked -Wpointer-arith		\
 -Winit-self -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo				\
 -Wstrict-null-sentinel -Wstrict-overflow=2 -Wsuggest-attribute=noreturn				\
--Wsuggest-final-methods -Wsuggest-final-types -Wsuggest-override -Wswitch-default	\
--Wsync-nand -Wundef -Wunreachable-code -Wunused -Wuseless-cast						\
+-Wsuggest-override -Wswitch-default													\
+-Wsync-nand -Wundef -Wunreachable-code -Wuseless-cast								\
 -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers				\
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector					\
--Wstack-usage=8192
+-Wstack-usage=8192 -Wno-unused-parameter
 
 CPP_SANITIZER_FLAGS = -fcheck-new 													\
 -fsized-deallocation -fstack-protector -fstrict-overflow -flto-odr-type-merging		\
@@ -50,7 +50,6 @@ LIB_OBJECTS = lib/logger/debug.o			\
 			  lib/logger/logger.o			\
 			  lib/geometry/secure_vector.o	\
 			  lib/geometry/matrix.o			\
-			  lib/geometry/vector.o			\
 			  lib/hash/murmur.o
 
 MAIN_NAME = main
@@ -58,14 +57,17 @@ MAIN_BLD_FULL_NAME = $(MAIN_NAME)$(BLD_SUFFIX)
 
 MAIN_MAIN = src/main.cpp
 
-MAIN_OBJECTS = $(LIB_OBJECTS)				\
-	src/utils/main_utils.o					\
-	src/utils/common_utils.o				\
-	src/graphics/renderable/renderable.o	\
-	src/graphics/renderable/arrow.o			\
-	src/graphics/renderable/shadetangle.o	\
-	src/graphics/shaders/rt_scene.o			\
-	src/graphics/shaders/ray_tracing.o		\
+MAIN_OBJECTS = $(LIB_OBJECTS)							\
+	src/utils/main_utils.o								\
+	src/utils/common_utils.o							\
+	src/graphics/renderable/renderable.o				\
+	src/graphics/renderable/arrow.o						\
+	src/graphics/renderable/shadetangle.o				\
+	src/graphics/renderable/interactive.o				\
+	src/graphics/renderable/gui.o						\
+	src/graphics/renderable/ray_tracing_plane.o			\
+	src/graphics/renderable/ray_tracing.o				\
+	src/graphics/renderable/buttons/render_control.o	\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))

@@ -8,7 +8,8 @@ Grid::Grid(const Vec2d& x_unit, const Vec2d& y_unit)
 static const unsigned MARK_COUNT = 10;
 static const unsigned GRID_POWER = 3;
 
-void Grid::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target) {
+void Grid::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
+                  const AssetShelf& assets) {
     static sf::Vertex vertices[4 + 2 * 2 * MARK_COUNT * GRID_POWER];
 
     Vec3d x_start(-pow(10, GRID_POWER - 1), 0.0, 1.0);

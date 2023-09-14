@@ -16,7 +16,7 @@
 
 template <class T>
 struct Stack {
-    explicit Stack();
+    Stack();
     explicit Stack(const Stack<T>& stack);
     ~Stack();
 
@@ -25,9 +25,9 @@ struct Stack {
     void push(const T& value);
     void pop();
 
-    T& top();
-    T& operator[](unsigned index);
-    size_t size();
+    T& top() const;
+    T& operator[](size_t index) const;
+    size_t size() const;
 
    private:
     void relocate(size_t new_capacity);

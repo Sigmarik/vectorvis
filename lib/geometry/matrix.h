@@ -13,7 +13,7 @@
 #define MATRIX_H
 
 #include "data_structures/stack.h"
-#include "vector.h"
+#include "vector.hpp"
 
 struct Mat22d {
     explicit Mat22d();
@@ -39,6 +39,10 @@ struct Mat33d {
 
     Vec3d operator*(const Vec3d& vector) const;
     Mat33d operator*(const Mat33d& matrix) const;
+
+    double determinant() const;
+
+    Mat33d inverse() const;
 
    private:
     double tl_, tm_, tr_, ml_, mm_, mr_, bl_, bm_, br_;

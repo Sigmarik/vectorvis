@@ -5,13 +5,13 @@
 
 template <class Mat>
 struct MatrixStack {
-    explicit MatrixStack(Mat base);
+    explicit MatrixStack(const Mat& base);
 
-    void push(Mat matrix);
+    void push(const Mat& matrix);
     void pop();
 
-    Mat& top();
-    size_t size();
+    Mat& top() const;
+    size_t size() const;
 
    private:
     Stack<Mat> stack_;

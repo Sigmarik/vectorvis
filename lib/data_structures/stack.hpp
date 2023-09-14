@@ -56,7 +56,7 @@ void Stack<T>::push(const T& value) {
         relocate(capacity_ == 0 ? 1 : capacity_ * 2);
     }
 
-    buffer_[size_] = value;
+    new (&buffer_[size_]) T(value);
     ++size_;
 }
 
@@ -73,17 +73,17 @@ void Stack<T>::pop() {
 }
 
 template <class T>
-T& Stack<T>::top() {
+T& Stack<T>::top() const {
     return buffer_[size_ - 1];
 }
 
 template <class T>
-T& Stack<T>::operator[](unsigned index) {
+T& Stack<T>::operator[](size_t index) const {
     return buffer_[index];
 }
 
 template <class T>
-size_t Stack<T>::size() {
+size_t Stack<T>::size() const {
     return size_;
 }
 

@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "../lib/geometry/vector.h"
+#include "../lib/geometry/vector.hpp"
 
 TEST(Vector2d, Constructors) {
     Vec2d vector;

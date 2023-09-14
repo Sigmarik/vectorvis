@@ -83,3 +83,28 @@ Mat33d Mat33d::operator*(const Mat33d& m) const {
                   bl_ * m.tl_ + bm_ * m.ml_ + br_ * m.bl_, bl_ * m.tm_ + bm_ * m.mm_ + br_ * m.bm_, bl_ * m.tr_ + bm_ * m.mr_ + br_ * m.br_);
     // clang-format on
 }
+
+double Mat33d::determinant() const {
+    return (tl_ * mm_ * br_ + ml_ * bm_ * tr_ + tm_ * mr_ * bl_) -
+           (tr_ * mm_ * bl_ + tl_ * mr_ * bm_ + tm_ * ml_ * br_);
+}
+
+Mat33d Mat33d::inverse() const {
+    double det = determinant();
+
+    double tl = mm_ * br_ - mr_ * bm_;
+    double tm = ml_ * br_ - mr_ * bl_;
+    double tr = ml_ * bm_ - mm_ * bl_;
+    double ml = tm_ * br_ - tr_ * bm_;
+    double mm = tl_ * br_ - tr_ * bl_;
+    double mr = tl_ * bm_ - tm_ * bl_;
+    double bl = tm_ * mr_ - tr_ * mm_;
+    double bm = tl_ * mr_ - tr_ * ml_;
+    double br = tl_ * mm_ - tm_ * ml_;
+
+    // clang-format off
+    return Mat33d(tl / det, tm / det, tr / det,
+                  ml / det, mm / det, mr / det,
+                  bl / det, bm / det, br / det);
+    // clang-format on
+}

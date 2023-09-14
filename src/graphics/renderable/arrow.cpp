@@ -12,7 +12,8 @@ Arrow::Arrow(const Vec2d& vector) : vector_(vector) {}
 
 Arrow::~Arrow() {}
 
-void Arrow::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target) {
+void Arrow::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
+                   const AssetShelf& assets) {
     static sf::Vertex vertices[6];
 
     if (vector_.length2() < 1e-7) return;
