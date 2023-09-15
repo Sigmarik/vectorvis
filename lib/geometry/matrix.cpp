@@ -93,13 +93,13 @@ Mat33d Mat33d::inverse() const {
     double det = determinant();
 
     double tl = mm_ * br_ - mr_ * bm_;
-    double tm = ml_ * br_ - mr_ * bl_;
-    double tr = ml_ * bm_ - mm_ * bl_;
-    double ml = tm_ * br_ - tr_ * bm_;
+    double tm = tr_ * bm_ - tm_ * br_;
+    double tr = tm_ * mr_ - tr_ * mm_;
+    double ml = mr_ * bl_ - ml_ * br_;
     double mm = tl_ * br_ - tr_ * bl_;
-    double mr = tl_ * bm_ - tm_ * bl_;
-    double bl = tm_ * mr_ - tr_ * mm_;
-    double bm = tl_ * mr_ - tr_ * ml_;
+    double mr = tr_ * ml_ - tl_ * mr_;
+    double bl = ml_ * bm_ - mm_ * bl_;
+    double bm = tm_ * bl_ - tl_ * bm_;
     double br = tl_ * mm_ - tm_ * ml_;
 
     // clang-format off
