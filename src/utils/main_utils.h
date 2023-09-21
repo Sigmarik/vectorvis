@@ -73,6 +73,4 @@ static const Plane PLANES[] = {
             .color = Vec3d(0.1, 0.1, 1.0), .roughness = 0.03, .specular = 1.0}),
 };
 
-AssetShelf load_assets();
-
 #endif

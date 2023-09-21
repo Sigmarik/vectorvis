@@ -2,6 +2,12 @@
 
 #include "sf_cheatsheet.hpp"
 
+void Interactive::on_event(MatrixStack<Mat33d>& stack,
+                           Interaction interaction) {
+    sf::Vector2i pos = sf::Mouse::getPosition(*interaction.window);
+    mouse_position_ = Vec2d((double)pos.x, (double)pos.y);
+}
+
 Vec2d Interactive::get_center() const { return center_; }
 Vec2d Interactive::get_size() const { return size_; }
 void Interactive::move(const Vec2d& new_center) { center_ = new_center; }
@@ -29,4 +35,16 @@ bool Interactive::is_under(const MatrixStack<Mat33d>& stack, const Vec2d& pos) {
     // clang-format on
 
     return top_check && right_check && bottom_check && left_check;
+}
+
+unsigned long long WorldTimer::get() {
+    static WorldTimer* instance = NULL;
+
+    if (instance == NULL) {
+        instance = (WorldTimer*)calloc(1, sizeof(*instance));
+        instance->clock_ = sf::Clock();
+    }
+
+    return (unsigned long long)instance->clock_.getElapsedTime()
+        .asMicroseconds();
 }

@@ -31,6 +31,10 @@ struct Panel : public Interactive {
    private:
     Mat33d get_matrix();
 
+    void fill_shader_parameters(MatrixStack<Mat33d>& stack,
+                                sf::RenderTarget& target,
+                                const AssetShelf& assets);
+
     Stack<Renderable*> children_;
     Stack<Interactive*> interactive_children_;
 
@@ -62,11 +66,19 @@ struct Button : public Interactive {
     bool is_pushed();
 
    private:
+    void update_timers();
+    void fill_shader_parameters(MatrixStack<Mat33d>& stack,
+                                sf::RenderTarget& target,
+                                const AssetShelf& assets);
+
     const char* text_;
     Vec3d color_;
 
     bool is_pushed_ = false;
-    double color_amplifier_ = 1.0;
+    bool is_hovered_ = false;
+    unsigned long long hover_timer_ = 0.0;
+    unsigned long long push_timer_ = 0.0;
+    unsigned long long last_upd_time_ = 0.0;
 };
 
 struct DragButton : public Button {

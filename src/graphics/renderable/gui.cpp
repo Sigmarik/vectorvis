@@ -16,24 +16,31 @@ Panel::Panel(const Vec2d& center, const Vec2d& size)
 
 void Panel::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
                    const AssetShelf& assets) {
-    static sf::ConvexShape shape(4);
+    static sf::VertexArray shape(sf::PrimitiveType::Quads, 4);
 
     Vec3d center = extrude(center_);
     Vec3d size = extrude(size_);
 
     // clang-format off
-    shape.setPoint(0, to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0))));
-    shape.setPoint(1, to_Vector2f(stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0))));
-    shape.setPoint(2, to_Vector2f(stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0))));
-    shape.setPoint(3, to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, -0.5, 0.0))));
+    shape[0].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)));
+    shape[1].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)));
+    shape[2].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)));
+    shape[3].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, -0.5, 0.0)));
     // clang-format on
 
-    shape.setFillColor(sf::Color(45, 46, 61));
+    shape[0].texCoords = sf::Vector2f(0.0, 0.0);
+    shape[1].texCoords = sf::Vector2f(1.0, 0.0);
+    shape[2].texCoords = sf::Vector2f(1.0, 1.0);
+    shape[3].texCoords = sf::Vector2f(0.0, 1.0);
 
-    shape.setOutlineThickness(-0.001f);
-    shape.setOutlineColor(sf::Color::Black);
+    // shape.setFillColor(sf::Color(45, 46, 61));
 
-    target.draw(shape);
+    // shape.setOutlineThickness(-0.001f);
+    // shape.setOutlineColor(sf::Color::Black);
+
+    fill_shader_parameters(stack, target, assets);
+
+    target.draw(shape, &assets.panel_design.shader);
 
     stack.push(get_matrix());
     for (size_t child_id = 0; child_id < children_.size(); ++child_id) {
@@ -47,6 +54,7 @@ void Panel::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
 }
 
 void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
+    Interactive::on_event(stack, interaction);
     if (movable_ && interaction.event->type == sf::Event::MouseMoved) {
         double cursor_x = (double)sf::Mouse::getPosition().x;
         double cursor_y = (double)sf::Mouse::getPosition().y;
@@ -101,6 +109,37 @@ Mat33d Panel::get_matrix() {
     // clang-format on
 }
 
+void Panel::fill_shader_parameters(MatrixStack<Mat33d>& stack,
+                                   sf::RenderTarget& target,
+                                   const AssetShelf& assets) {
+    //! WARNING: Intentional const qualifier violation!
+    AssetShelf& shelf = *(AssetShelf*)(&assets);
+    sf::Shader& shader = shelf.panel_design.shader;
+    shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
+    shader.setParameter("center", to_Vector2f(center_));
+
+    Vec3d center = extrude(center_);
+    Vec3d size = extrude(size_);
+
+    Vec3d window_size = Vec3d(target.getSize().x, target.getSize().y, 1.0);
+
+    Vec3d tl =
+        stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)) * window_size;
+    Vec3d tr =
+        stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)) * window_size;
+    Vec3d br =
+        stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)) * window_size;
+
+    shader.setParameter("center_px",
+                        to_Vector2f((stack.top() * center) * window_size));
+    shader.setParameter("size", to_Vector2f(size_));
+
+    shader.setParameter("size_px", sf::Vector2f((float)(tl - tr).length(),
+                                                (float)(tr - br).length()));
+    shader.setParameter("mouse", to_Vector2f(mouse_position_));
+    shader.setParameter("window_size", to_Vector2f(window_size));
+}
+
 Button::Button(const Vec2d& center, const Vec2d& size, const char* text,
                const Vec3d& color)
     : text_(text), color_(color) {
@@ -110,7 +149,7 @@ Button::Button(const Vec2d& center, const Vec2d& size, const char* text,
 
 void Button::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
                     const AssetShelf& assets) {
-    static sf::ConvexShape shape(4);
+    static sf::VertexArray shape(sf::PrimitiveType::Quads, 4);
     static sf::Text render_text("[DEBUG TEXT]", sf::Font(), 13);
 
     double text_scale_x = (stack.top() * Vec3d(1.0, 0.0, 0.0)).length() / 50.0;
@@ -125,18 +164,25 @@ void Button::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
     Vec3d size = extrude(size_);
 
     // clang-format off
-    shape.setPoint(0, to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0))));
-    shape.setPoint(1, to_Vector2f(stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0))));
-    shape.setPoint(2, to_Vector2f(stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0))));
-    shape.setPoint(3, to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, -0.5, 0.0))));
+    shape[0].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)));
+    shape[1].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)));
+    shape[2].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)));
+    shape[3].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, -0.5, 0.0)));
     // clang-format on
 
-    shape.setFillColor(to_color(color_ * color_amplifier_));
+    shape[0].texCoords = sf::Vector2f(0.0, 0.0);
+    shape[1].texCoords = sf::Vector2f(1.0, 0.0);
+    shape[2].texCoords = sf::Vector2f(1.0, 1.0);
+    shape[3].texCoords = sf::Vector2f(0.0, 1.0);
 
-    shape.setOutlineThickness(-0.001f);
-    shape.setOutlineColor(is_pushed_ ? sf::Color::White : sf::Color::Black);
+    // shape.setFillColor(to_color(color_ * color_amplifier_));
 
-    target.draw(shape);
+    // shape.setOutlineThickness(-0.001f);
+    // shape.setOutlineColor(is_pushed_ ? sf::Color::White : sf::Color::Black);
+
+    fill_shader_parameters(stack, target, assets);
+
+    target.draw(shape, &assets.button_design.shader);
 
     render_text.setString(text_);
     render_text.setPosition(to_Vector2f(stack.top() * center));
@@ -152,14 +198,21 @@ static const double AMPL_HOVER = 0.9;
 static const double AMPL_PUSHED = 0.8;
 
 void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
+    Interactive::on_event(stack, interaction);
     Vec2d mouse_pos((double)sf::Mouse::getPosition(*interaction.window).x /
                         interaction.window->getSize().x,
                     (double)sf::Mouse::getPosition(*interaction.window).y /
                         interaction.window->getSize().y);
     bool has_mouse_over = is_under(stack, mouse_pos) && !interaction.obstructed;
 
+    if (is_hovered_ != has_mouse_over) {
+        is_hovered_ = has_mouse_over;
+        hover_timer_ = 0;
+        update_timers();
+    }
+
     if (!is_pushed_) {
-        color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
+        // color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
     }
 
     if (interaction.event->mouseButton.button != sf::Mouse::Left) return;
@@ -167,15 +220,19 @@ void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
     if (interaction.event->type == sf::Event::MouseButtonReleased &&
         is_pushed_) {
         is_pushed_ = false;
-        color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
+        // color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
         on_release(interaction);
+        push_timer_ = 0;
+        update_timers();
     }
 
     if (interaction.event->type == sf::Event::MouseButtonPressed &&
         has_mouse_over && !is_pushed_) {
         is_pushed_ = true;
-        color_amplifier_ = AMPL_PUSHED;
+        // color_amplifier_ = AMPL_PUSHED;
         on_push(interaction);
+        push_timer_ = 0;
+        update_timers();
     }
 }
 
@@ -188,6 +245,51 @@ void Button::set_text(const char* text) { text_ = text; }
 void Button::set_color(const Vec3d& color) { color_ = color; }
 
 bool Button::is_pushed() { return is_pushed_; }
+
+void Button::update_timers() {
+    hover_timer_ += WorldTimer::get() - last_upd_time_;
+    push_timer_ += WorldTimer::get() - last_upd_time_;
+    last_upd_time_ = WorldTimer::get();
+}
+
+void Button::fill_shader_parameters(MatrixStack<Mat33d>& stack,
+                                    sf::RenderTarget& target,
+                                    const AssetShelf& assets) {
+    //! WARNING: Intentional const qualifier validation!
+    AssetShelf& shelf = *(AssetShelf*)(&assets);
+    sf::Shader& shader = shelf.button_design.shader;
+    shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
+
+    update_timers();
+
+    shader.setParameter("hover_time", (float)(hover_timer_ / 1000000.0 *
+                                              (is_hovered_ ? 1.0 : -1.0)));
+    shader.setParameter("push_time", (float)(push_timer_ / 1000000.0 *
+                                             (is_pushed_ ? 1.0 : -1.0)));
+
+    shader.setParameter("center", to_Vector2f(center_));
+
+    Vec3d center = extrude(center_);
+    Vec3d size = extrude(size_);
+
+    Vec3d window_size = Vec3d(target.getSize().x, target.getSize().y, 1.0);
+
+    Vec3d tl =
+        stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)) * window_size;
+    Vec3d tr =
+        stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)) * window_size;
+    Vec3d br =
+        stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)) * window_size;
+
+    shader.setParameter("center_px",
+                        to_Vector2f((stack.top() * center) * window_size));
+    shader.setParameter("size", to_Vector2f(size_));
+
+    shader.setParameter("size_px", sf::Vector2f((float)(tl - tr).length(),
+                                                (float)(tr - br).length()));
+    shader.setParameter("mouse", to_Vector2f(mouse_position_));
+    shader.setParameter("window_size", to_Vector2f(window_size));
+}
 
 DragButton::DragButton(Panel& panel)
     : Button(panel.get_size() * Vec2d(0.0, 0.5),

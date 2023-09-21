@@ -14,11 +14,27 @@
 
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Shader.hpp>
+#include <SFML/Graphics/Texture.hpp>
 
 #include "geometry/matrix_stack.h"
 
+struct DesignDescriptor {
+    void load(const char* path);
+
+    sf::Texture atlas = sf::Texture();
+    sf::Shader shader = sf::Shader();
+};
+
 struct AssetShelf final {
+    AssetShelf();
+
+    bool shaders_available = false;
+
     sf::Font font;
+    DesignDescriptor button_design;
+    DesignDescriptor panel_design;
 };
 
 struct Renderable {

@@ -77,7 +77,7 @@ int main(const int argc, char** argv) {
     menu_panel.add_interactive_child(light_button);
     menu_panel.add_interactive_child(menu_move_button);
 
-    AssetShelf assets = load_assets();
+    AssetShelf assets;
 
     unsigned tick = 0;
     while (window.isOpen()) {

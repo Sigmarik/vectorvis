@@ -19,6 +19,10 @@ static inline sf::Vector2f to_Vector2f(const Vec3d& vector) {
                         (float)(vector.get_y() / vector.get_z()));
 }
 
+static inline sf::Vector2f to_Vector2f(const Vec2d& vector) {
+    return sf::Vector2f((float)(vector.get_x()), (float)(vector.get_y()));
+}
+
 static inline double clamp(double value) {
     return value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value);
 }

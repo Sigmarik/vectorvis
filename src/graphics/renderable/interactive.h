@@ -17,6 +17,15 @@
 
 #include "renderable.h"
 
+struct WorldTimer final {
+    static unsigned long long get();
+
+   private:
+    WorldTimer();
+    WorldTimer& operator=(const WorldTimer& timer);
+    sf::Clock clock_;
+};
+
 struct Interaction {
     sf::Event* event = NULL;
     sf::Window* window = NULL;
@@ -26,8 +35,7 @@ struct Interaction {
 struct Interactive : public Renderable {
     virtual ~Interactive() = default;
 
-    virtual void on_event(MatrixStack<Mat33d>& stack,
-                          Interaction interaction) = 0;
+    virtual void on_event(MatrixStack<Mat33d>& stack, Interaction interaction);
 
     Vec2d get_center() const;
     Vec2d get_size() const;
@@ -38,6 +46,7 @@ struct Interactive : public Renderable {
 
    protected:
     Vec2d center_ = Vec2d(), size_ = Vec2d(1.0, 1.0);
+    Vec2d mouse_position_ = Vec2d(0.0, 0.0);
 };
 
 #endif
