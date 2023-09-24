@@ -64,12 +64,13 @@ template <class T>
 void Stack<T>::pop() {
     if (size_ == 0) return;
 
-    if (size_ - 1 < capacity_ / 4 && capacity_ >= 2) {
+    --size_;
+
+    if (size_ * 4 < capacity_ && capacity_ > 16) {
         relocate(capacity_ / 2);
     }
 
-    buffer_[size_ - 1].~T();
-    --size_;
+    buffer_[size_].~T();
 }
 
 template <class T>
@@ -90,6 +91,7 @@ size_t Stack<T>::size() const {
 template <class T>
 void Stack<T>::relocate(size_t new_capacity) {
     if (new_capacity < size_) return;
+    if (new_capacity == 0) return;
 
     T* new_buffer = (T*)calloc(new_capacity, sizeof(T));
     for (size_t id = 0; id < size_; ++id) {

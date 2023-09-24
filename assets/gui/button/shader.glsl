@@ -1,6 +1,9 @@
 // Texture atlas
 uniform sampler2D atlas;
 
+// Element space -> screen space matrix
+uniform mat3 transform;
+
 // Program timer
 uniform float time;
 // Time since the mouse hovered over the element (if negative, time since the
@@ -39,9 +42,12 @@ void main() {
         on_border = 1;
     }
 
-    float hover_transition = hover_time > 0.0 ? hover_time : 0.5 + hover_time;
+    const float HOVER_SPEED = 2.0;
+    const float PUSH_SPEED = 4.0;
+    float hover_transition = hover_time > 0.0 ? hover_time * HOVER_SPEED
+                                              : 0.5 + hover_time * HOVER_SPEED;
     float push_transition =
-        push_time > 0.0 ? push_time * 2.0 : 0.5 + push_time * 2.0;
+        push_time > 0.0 ? push_time * PUSH_SPEED : 0.5 + push_time * PUSH_SPEED;
 
     vec3 color = vec3(0.0, 0.0, 0.0);
 

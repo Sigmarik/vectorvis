@@ -124,7 +124,7 @@ struct Vec2d {
     void set_y(double y) { y_ = y; }
 
    private:
-    double x_, y_;
+    double x_ = 0.0, y_ = 0.0;
 };
 
 static double dot(const Vec2d& alpha, const Vec2d& beta) {

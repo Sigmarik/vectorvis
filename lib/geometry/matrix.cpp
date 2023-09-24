@@ -78,9 +78,9 @@ Vec3d Mat33d::operator*(const Vec3d& v) const {
 
 Mat33d Mat33d::operator*(const Mat33d& m) const {
     // clang-format off
-    return Mat33d(tl_ * m.tl_ + tm_ * m.ml_ + tr_ * m.bl_, tl_ * m.tm_ + tm_ * m.mm_ + tr_ * m.bm_, tl_ * m.tr_ + tm_ * m.mr_ + tr_ * m.br_,
-                  ml_ * m.tl_ + mm_ * m.ml_ + mr_ * m.bl_, ml_ * m.tm_ + mm_ * m.mm_ + mr_ * m.bm_, ml_ * m.tr_ + mm_ * m.mr_ + mr_ * m.br_,
-                  bl_ * m.tl_ + bm_ * m.ml_ + br_ * m.bl_, bl_ * m.tm_ + bm_ * m.mm_ + br_ * m.bm_, bl_ * m.tr_ + bm_ * m.mr_ + br_ * m.br_);
+    return Mat33d(tl_ * m.tl_ + tm_ * m.ml_ + tr_ * m.bl_,  tl_ * m.tm_ + tm_ * m.mm_ + tr_ * m.bm_,  tl_ * m.tr_ + tm_ * m.mr_ + tr_ * m.br_,
+                  ml_ * m.tl_ + mm_ * m.ml_ + mr_ * m.bl_,  ml_ * m.tm_ + mm_ * m.mm_ + mr_ * m.bm_,  ml_ * m.tr_ + mm_ * m.mr_ + mr_ * m.br_,
+                  bl_ * m.tl_ + bm_ * m.ml_ + br_ * m.bl_,  bl_ * m.tm_ + bm_ * m.mm_ + br_ * m.bm_,  bl_ * m.tr_ + bm_ * m.mr_ + br_ * m.br_);
     // clang-format on
 }
 
@@ -107,4 +107,44 @@ Mat33d Mat33d::inverse() const {
                   ml / det, mm / det, mr / det,
                   bl / det, bm / det, br / det);
     // clang-format on
+}
+
+double Mat33d::at(unsigned x, unsigned y) const {
+    return (&tl_)[x + y * 3];
+    // switch (x) {
+    //     case 0:
+    //         switch (y) {
+    //             case 0:
+    //                 return tl_;
+    //             case 1:
+    //                 return ml_;
+    //             case 2:
+    //                 return bl_;
+    //             default:
+    //                 return 0.0;
+    //         }
+    //     case 1:
+    //         switch (y) {
+    //             case 0:
+    //                 return tm_;
+    //             case 1:
+    //                 return mm_;
+    //             case 2:
+    //                 return bm_;
+    //             default:
+    //                 return 0.0;
+    //         }
+    //     case 2:
+    //         switch (y) {
+    //             case 0:
+    //                 return tr_;
+    //             case 1:
+    //                 return mr_;
+    //             case 2:
+    //                 return br_;
+    //             default:
+    //                 return 0.0;
+    //         }
+    // }
+    // return 0;
 }

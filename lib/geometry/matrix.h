@@ -44,6 +44,8 @@ struct Mat33d {
 
     Mat33d inverse() const;
 
+    double at(unsigned x, unsigned y) const;
+
    private:
     double tl_, tm_, tr_, ml_, mm_, mr_, bl_, bm_, br_;
 };

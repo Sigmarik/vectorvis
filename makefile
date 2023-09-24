@@ -15,7 +15,7 @@ CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -Ofast -pie -pthread				\
 -Wsync-nand -Wundef -Wunreachable-code -Wuseless-cast								\
 -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers				\
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector					\
--Wstack-usage=8192 -Wno-unused-parameter
+-Wstack-usage=8192 -Wno-unused-parameter -Wno-deprecated-declarations
 
 CPP_SANITIZER_FLAGS = -fcheck-new 													\
 -fsized-deallocation -fstack-protector -fstrict-overflow -flto-odr-type-merging		\
@@ -68,6 +68,8 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/graphics/renderable/ray_tracing_plane.o			\
 	src/graphics/renderable/ray_tracing.o				\
 	src/graphics/renderable/buttons/render_control.o	\
+	src/graphics/renderable/molecule_view.o				\
+	src/simulation/simulation.o							\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
@@ -92,7 +94,7 @@ run: asset $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
 	@cd $(BLD_FOLDER) && exec ./$(MAIN_BLD_FULL_NAME) $(ARGS)
 
 debug: asset $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
-	@cd $(BLD_FOLDER) && radare2 -d ./$(MAIN_BLD_FULL_NAME) $(ARGS)
+	@cd $(BLD_FOLDER) && gdb ./$(MAIN_BLD_FULL_NAME) $(ARGS)
 
 install-gtest:
 	sudo apt-get install libgtest-dev

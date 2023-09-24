@@ -16,6 +16,7 @@
 
 #include "graphics/renderable/arrow.h"
 #include "graphics/renderable/buttons/render_control.h"
+#include "graphics/renderable/molecule_view.h"
 #include "graphics/renderable/ray_tracing_plane.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
@@ -51,37 +52,42 @@ int main(const int argc, char** argv) {
 
     MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
-    Arrow arrow(Vec2d(4.0, M_PI / 2.0));
+    GasVolume simulation;
+    MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0), Vec2d(4.0, 4.0));
+    Panel sim_panel(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
 
-    RayTracingPlane scene_view(Vec2d(0.0, 0.0), Vec2d(12.0, 10.0), 64, 64);
+    simulation.add_light_molecule(
+        LightMolecule(Vec2d(0.0, 0.0), Vec2d(1.0, M_PI)));
+    simulation.add_light_molecule(
+        LightMolecule(Vec2d(1.0, 0.0), Vec2d(-1.01, M_PI + 0.01)));
 
-    for (unsigned id = 0; id < sizeof(LIGHTS) / sizeof(*LIGHTS); ++id) {
-        scene_view.add_light(LIGHTS[id]);
-    }
-    for (unsigned id = 0; id < sizeof(PLANES) / sizeof(*PLANES); ++id) {
-        scene_view.add_plane(PLANES[id]);
-    }
-    for (unsigned id = 0; id < sizeof(SPHERES) / sizeof(*SPHERES); ++id) {
-        scene_view.add_sphere(SPHERES[id]);
-    }
+    sim_panel.add_child(simulation_view);
 
-    Panel menu_panel(Vec2d(8.0, -4.0), Vec2d(4.0, 2.0));
-    ProgressResetButton reset_button(scene_view, Vec2d(-0.6, 0.0),
-                                     Vec2d(1.0, 0.5), "Reset");
-    LightOnOffButton light_button(scene_view, Vec2d(0.6, 0.0), Vec2d(1.0, 0.5),
-                                  "Light");
+    Panel menu_panel(Vec2d(0.0, 0.0), Vec2d(7.0, 5.0));
+    ValveControlButton input_button(simulation, VALVE_IN, Vec2d(2.25, 1.5),
+                                    Vec2d(1.0, 0.5), "Inflate");
+    ValveControlButton output_button(simulation, VALVE_OUT, Vec2d(2.25, 0.5),
+                                     Vec2d(1.0, 0.5), "Deflate");
 
     DragButton menu_move_button(menu_panel);
 
-    menu_panel.add_interactive_child(reset_button);
-    menu_panel.add_interactive_child(light_button);
+    menu_panel.add_interactive_child(input_button);
+    menu_panel.add_interactive_child(output_button);
     menu_panel.add_interactive_child(menu_move_button);
+    menu_panel.add_interactive_child(sim_panel);
 
     AssetShelf assets;
+
+    unsigned long long last_tick_time = WorldTimer::get();
 
     unsigned tick = 0;
     while (window.isOpen()) {
         ++tick;
+
+        unsigned long long new_tick_time = WorldTimer::get();
+        double delta_time =
+            (double)(new_tick_time - last_tick_time) / 1000000.0;
+        last_tick_time = new_tick_time;
 
         Mat33d screen_matrix =
             get_screen_matrix(window.getSize().x, window.getSize().y);
@@ -99,18 +105,17 @@ int main(const int argc, char** argv) {
 
         window.clear();
 
-        arrow.set_vector(
-            Vec2d(sin(tick / 100.0) * 7.0, cos(tick / 100.0) * 7.0));
-        arrow.render(render_stack, window, assets);
-
-        scene_view.process(1);
-        scene_view.render(render_stack, window, assets);
-
         menu_panel.render(render_stack, window, assets);
 
         window.display();
 
         render_stack.pop();
+
+        double phys_dt = 0.0;
+        while (phys_dt < delta_time * PHYS_SIM_SPEED) {
+            simulation.tick(PHYS_TIME_STEP);
+            phys_dt += PHYS_TIME_STEP;
+        }
     }
 
     //! ERROR: For some reason, the SFML likes to set errno to 11 (EAGAIN),

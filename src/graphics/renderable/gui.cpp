@@ -22,9 +22,9 @@ void Panel::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
     Vec3d size = extrude(size_);
 
     // clang-format off
-    shape[0].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)));
-    shape[1].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)));
-    shape[2].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)));
+    shape[0].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5,  0.5, 0.0)));
+    shape[1].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5,   0.5, 0.0)));
+    shape[2].position = to_Vector2f(stack.top() * (center + size * Vec3d(0.5,  -0.5, 0.0)));
     shape[3].position = to_Vector2f(stack.top() * (center + size * Vec3d(-0.5, -0.5, 0.0)));
     // clang-format on
 
@@ -115,6 +115,9 @@ void Panel::fill_shader_parameters(MatrixStack<Mat33d>& stack,
     //! WARNING: Intentional const qualifier violation!
     AssetShelf& shelf = *(AssetShelf*)(&assets);
     sf::Shader& shader = shelf.panel_design.shader;
+
+    set_matrix_uniform(shader, "transform", stack.top());
+
     shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
     shader.setParameter("center", to_Vector2f(center_));
 
@@ -175,11 +178,6 @@ void Button::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
     shape[2].texCoords = sf::Vector2f(1.0, 1.0);
     shape[3].texCoords = sf::Vector2f(0.0, 1.0);
 
-    // shape.setFillColor(to_color(color_ * color_amplifier_));
-
-    // shape.setOutlineThickness(-0.001f);
-    // shape.setOutlineColor(is_pushed_ ? sf::Color::White : sf::Color::Black);
-
     fill_shader_parameters(stack, target, assets);
 
     target.draw(shape, &assets.button_design.shader);
@@ -211,16 +209,11 @@ void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
         update_timers();
     }
 
-    if (!is_pushed_) {
-        // color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
-    }
-
     if (interaction.event->mouseButton.button != sf::Mouse::Left) return;
 
     if (interaction.event->type == sf::Event::MouseButtonReleased &&
         is_pushed_) {
         is_pushed_ = false;
-        // color_amplifier_ = has_mouse_over ? AMPL_HOVER : AMPL_DEFAULT;
         on_release(interaction);
         push_timer_ = 0;
         update_timers();
@@ -229,7 +222,6 @@ void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
     if (interaction.event->type == sf::Event::MouseButtonPressed &&
         has_mouse_over && !is_pushed_) {
         is_pushed_ = true;
-        // color_amplifier_ = AMPL_PUSHED;
         on_push(interaction);
         push_timer_ = 0;
         update_timers();
@@ -255,17 +247,20 @@ void Button::update_timers() {
 void Button::fill_shader_parameters(MatrixStack<Mat33d>& stack,
                                     sf::RenderTarget& target,
                                     const AssetShelf& assets) {
-    //! WARNING: Intentional const qualifier validation!
+    //! WARNING: Intentional const qualifier violation!
     AssetShelf& shelf = *(AssetShelf*)(&assets);
     sf::Shader& shader = shelf.button_design.shader;
+
+    set_matrix_uniform(shader, "transform", stack.top());
+
     shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
 
     update_timers();
 
-    shader.setParameter("hover_time", (float)(hover_timer_ / 1000000.0 *
-                                              (is_hovered_ ? 1.0 : -1.0)));
-    shader.setParameter("push_time", (float)(push_timer_ / 1000000.0 *
-                                             (is_pushed_ ? 1.0 : -1.0)));
+    shader.setParameter("hover_time", ((float)hover_timer_ / 1000000.0f *
+                                       (is_hovered_ ? 1.0f : -1.0f)));
+    shader.setParameter("push_time", ((float)push_timer_ / 1000000.0f *
+                                      (is_pushed_ ? 1.0f : -1.0f)));
 
     shader.setParameter("center", to_Vector2f(center_));
 
