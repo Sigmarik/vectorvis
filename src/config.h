@@ -36,7 +36,7 @@ static const unsigned LOG_THRESHOLD = 0;
 
 static const double CMP_EPS = 1e-5;
 
-static double PHYS_TIME_STEP = 0.002;
+static double PHYS_TIME_STEP = 0.001;
 static double PHYS_SIM_SPEED = 0.1;
 
 #endif

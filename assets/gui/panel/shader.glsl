@@ -68,7 +68,7 @@ void main() {
     if (on_border != 0)
         color = vec3(0, 0.0, 0.0);
     else
-        color = vec3(0.22, 0.23, 0.32) * (stripe_mask ? 1.0 : 0.9) *
+        color = vec3(0.22, 0.23, 0.32) * (stripe_mask ? 1.0 : 0.95) *
                 step(0.9, 1.06, mouse_aura);
 
     color *= 1.0 - 0.2 * border_aura * border_aura * border_aura;

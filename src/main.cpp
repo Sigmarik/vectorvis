@@ -15,9 +15,8 @@
 #include <SFML/Window.hpp>
 
 #include "graphics/renderable/arrow.h"
-#include "graphics/renderable/buttons/render_control.h"
 #include "graphics/renderable/molecule_view.h"
-#include "graphics/renderable/ray_tracing_plane.h"
+#include "graphics/renderable/plot.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
 #include "logger/logger.h"
@@ -52,7 +51,7 @@ int main(const int argc, char** argv) {
 
     MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
-    GasVolume simulation;
+    static GasVolume simulation;
     MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0), Vec2d(4.0, 4.0));
     Panel sim_panel(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
 
@@ -64,10 +63,18 @@ int main(const int argc, char** argv) {
     sim_panel.add_child(simulation_view);
 
     Panel menu_panel(Vec2d(0.0, 0.0), Vec2d(7.0, 5.0));
-    ValveControlButton input_button(simulation, VALVE_IN, Vec2d(2.25, 1.5),
+    ValveControlButton input_button(simulation, VALVE_IN, Vec2d(2.25, 2.0),
                                     Vec2d(1.0, 0.5), "Inflate");
-    ValveControlButton output_button(simulation, VALVE_OUT, Vec2d(2.25, 0.5),
+    ValveControlButton output_button(simulation, VALVE_OUT, Vec2d(2.25, 1.25),
                                      Vec2d(1.0, 0.5), "Deflate");
+
+    Panel temp_panel(Vec2d(2.25, 0.25), Vec2d(2.0, 1.0));
+    Plot temperature_plt(Vec2d(0.0, 0.0), Vec2d(2.0, 0.75), "Temp");
+    temp_panel.add_child(temperature_plt);
+
+    Panel pres_panel(Vec2d(2.25, -1.0), Vec2d(2.0, 1.0));
+    Plot pressure_plt(Vec2d(0.0, 0.0), Vec2d(2.0, 0.75), "Pres");
+    pres_panel.add_child(pressure_plt);
 
     DragButton menu_move_button(menu_panel);
 
@@ -75,10 +82,14 @@ int main(const int argc, char** argv) {
     menu_panel.add_interactive_child(output_button);
     menu_panel.add_interactive_child(menu_move_button);
     menu_panel.add_interactive_child(sim_panel);
+    menu_panel.add_interactive_child(temp_panel);
+    menu_panel.add_interactive_child(pres_panel);
 
     AssetShelf assets;
 
     unsigned long long last_tick_time = WorldTimer::get();
+
+    unsigned long long last_plt_update = WorldTimer::get();
 
     unsigned tick = 0;
     while (window.isOpen()) {
@@ -115,6 +126,12 @@ int main(const int argc, char** argv) {
         while (phys_dt < delta_time * PHYS_SIM_SPEED) {
             simulation.tick(PHYS_TIME_STEP);
             phys_dt += PHYS_TIME_STEP;
+        }
+
+        if (WorldTimer::get() - last_plt_update > 100000) {
+            temperature_plt.add(simulation.get_temperature());
+            pressure_plt.add(simulation.get_pressure() / 1000.0);
+            last_plt_update = WorldTimer::get();
         }
     }
 

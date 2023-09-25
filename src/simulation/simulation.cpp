@@ -14,11 +14,11 @@ static const double GRAVITY = 0.0;  // 20.0;
 void Molecule::tick(GasVolume& volume, double delta_time) {
     velocity_ += Vec2d(0.0, GRAVITY * delta_time);
     position_ += velocity_ * delta_time;
-
-    round();
 }
 
-void Molecule::round() {
+double Molecule::round() {
+    double delta_pres = 0.0;
+
     int bounces = 0;
 
     bounces = (int)floor(position_.get_x() / VOLUME_WIDTH);
@@ -26,17 +26,24 @@ void Molecule::round() {
     position_.set_x((bounces & 1) ? 1.0 - new_x : new_x);
     if (bounces & 1) velocity_.set_x(-velocity_.get_x());
 
+    delta_pres += mass_ * abs(velocity_.get_x());
+
     bounces = (int)floor(position_.get_y() / VOLUME_HEIGHT);
     double new_y = position_.get_y() - VOLUME_WIDTH * bounces;
     position_.set_y((bounces & 1) ? 1.0 - new_y : new_y);
     if (bounces & 1) velocity_.set_y(-velocity_.get_y());
+
+    delta_pres += mass_ * abs(velocity_.get_y());
+
+    return delta_pres;
 }
 
 static const double MOLECULE_RADIUS = 0.01;
 
-static const double BOUNCINESS = 1.0;
+static const double BOUNCINESS = 1.0;          // 0.95;
+static const double REACTION_THRESHOLD = 1.0;  // INFINITY;
 
-void Molecule::collide(Molecule& molecule) {
+void Molecule::collide(Molecule& molecule, GasVolume& volume) {
     double distance = (position_ - molecule.position_).length();
     if (distance > MOLECULE_RADIUS * 2.0) return;
 
@@ -64,15 +71,25 @@ void Molecule::collide(Molecule& molecule) {
 
     velocity_ = center_velocity + this_change * BOUNCINESS;
     molecule.velocity_ = center_velocity + that_change * BOUNCINESS;
+
+    double force =
+        this_delta.length() * mass_ + that_delta.length() * molecule.mass_;
+
+    if (force > REACTION_THRESHOLD) {
+        volume.react(*this, molecule);
+    }
 }
 
 static const unsigned COLLISION_CHECKS = 5;
 
 void GasVolume::tick(double delta_time) {
+    pressure_ = 0.0;
+
     if (valve_in_open_) {
         add_light_molecule(
             LightMolecule(Vec2d((double)(rand() % 1024) / 1024.0, 0.0),
                           Vec2d::radial(rand(), 1.0)));
+        // valve_in_open_ = false;
     }
 
     if (valve_out_open_ && molecules_.size() > 0) {
@@ -84,6 +101,7 @@ void GasVolume::tick(double delta_time) {
 
     for (size_t id = 0; id < molecules_.size(); ++id) {
         molecules_[id].tick(*this, delta_time);
+        pressure_ += molecules_[id].round();
         pin(molecules_[id]);
     }
 
@@ -100,7 +118,30 @@ void GasVolume::tick(double delta_time) {
     update_stats();
 }
 
-void GasVolume::react(Molecule& alpha, Molecule& beta) {}
+void GasVolume::react(Molecule& alpha, Molecule& beta) {
+    if (!alpha.is_alive() || !beta.is_alive()) return;
+
+    Vec2d origin = (alpha.get_position() + beta.get_position()) / 2.0;
+    Vec2d avg_vel = (alpha.get_velocity() * alpha.get_mass(),
+                     beta.get_velocity() * beta.get_mass()) /
+                    (alpha.get_mass() + beta.get_mass());
+
+    if (alpha.get_type() == MT_LIGHT || beta.get_type() == MT_LIGHT) {
+        add_heavy_molecule(
+            HeavyMolecule(origin, avg_vel, alpha.get_mass() + beta.get_mass()));
+    } else {
+        for (double spent_mass = 0.0;
+             spent_mass < alpha.get_mass() + beta.get_mass();
+             spent_mass += 1.0) {
+            Vec2d kick = Vec2d::radial(rand(), 1.0);
+            add_light_molecule(
+                LightMolecule(origin + kick * 0.001, avg_vel + kick));
+        }
+    }
+
+    alpha.set_alive(false);
+    beta.set_alive(false);
+}
 
 void GasVolume::update_stats() {
     if (molecules_.size() == 0) return;
@@ -127,19 +168,21 @@ void GasVolume::process_collisions(Molecule& molecule) {
         (int)floor(molecule.get_position().get_y() * (double)GRID_RESOLUTION);
 
     for (int x_shift = -1; x_shift <= 1; ++x_shift) {
-        if (x_coord + x_shift < 0 || x_coord + x_shift >= GRID_RESOLUTION) {
+        if (x_coord + x_shift < 0 ||
+            (size_t)(x_coord + x_shift) >= GRID_RESOLUTION) {
             continue;
         }
 
         for (int y_shift = -1; y_shift <= 1; ++y_shift) {
-            if (y_coord + y_shift < 0 || y_coord + y_shift >= GRID_RESOLUTION) {
+            if (y_coord + y_shift < 0 ||
+                (size_t)(y_coord + y_shift) >= GRID_RESOLUTION) {
                 continue;
             }
 
             Molecule** cell = grid_[x_coord + x_shift][y_coord + y_shift];
             for (unsigned id = 0; id < MAX_CELL_CAPACITY; ++id) {
                 if (cell[id] == NULL) continue;
-                molecule.collide(*cell[id]);
+                molecule.collide(*cell[id], *this);
                 //* To be honest, here we should unpin each molecule of the
                 //* cell and pin it after the collision processing is done,
                 //* but... Lets just say that cases in which this correction
@@ -175,4 +218,12 @@ void MoleculeStorage::filter() {
     }
 
     update_size();
+}
+
+HeavyMolecule::HeavyMolecule() : Molecule(Vec2d(), Vec2d(), MT_LIGHT) {}
+
+HeavyMolecule::HeavyMolecule(const Vec2d& position, const Vec2d& velocity,
+                             double mass)
+    : Molecule(position, velocity, MT_HEAVY) {
+    mass_ = mass;
 }

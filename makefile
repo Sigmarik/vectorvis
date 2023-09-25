@@ -15,7 +15,8 @@ CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -Ofast -pie -pthread				\
 -Wsync-nand -Wundef -Wunreachable-code -Wuseless-cast								\
 -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers				\
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector					\
--Wstack-usage=8192 -Wno-unused-parameter -Wno-deprecated-declarations
+-Wstack-usage=8192 -Wno-unused-parameter -Wno-deprecated-declarations				\
+-Wno-unused-variable
 
 CPP_SANITIZER_FLAGS = -fcheck-new 													\
 -fsized-deallocation -fstack-protector -fstrict-overflow -flto-odr-type-merging		\
@@ -69,6 +70,7 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/graphics/renderable/ray_tracing.o				\
 	src/graphics/renderable/buttons/render_control.o	\
 	src/graphics/renderable/molecule_view.o				\
+	src/graphics/renderable/plot.o						\
 	src/simulation/simulation.o							\
 	src/io/main_io.o
 

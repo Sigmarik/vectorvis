@@ -27,7 +27,7 @@ struct Molecule {
     Molecule& operator=(const Molecule& molecule) = default;
 
     void tick(GasVolume& volume, double delta_time);
-    void round();
+    double round();
 
     void set_position(const Vec2d& position) { position_ = position; }
     void set_velocity(const Vec2d& velocity) { velocity_ = velocity; }
@@ -40,7 +40,7 @@ struct Molecule {
     void set_alive(bool alive) { alive_ = alive; }
     bool is_alive() const { return alive_; }
 
-    void collide(Molecule& molecule);
+    void collide(Molecule& molecule, GasVolume& volume);
 
     MoleculeType get_type() const { return type_; }
 
@@ -67,7 +67,8 @@ struct LightMolecule : public Molecule {
 struct HeavyMolecule : public Molecule {
     HeavyMolecule();
     explicit HeavyMolecule(const Vec2d& position,
-                           const Vec2d& velocity = Vec2d(0.0, 0.0));
+                           const Vec2d& velocity = Vec2d(0.0, 0.0),
+                           double mass = 2.0);
 
     HeavyMolecule(const HeavyMolecule& molecule) = default;
 
@@ -75,7 +76,7 @@ struct HeavyMolecule : public Molecule {
 };
 
 struct MoleculeStorage {
-    MoleculeStorage() = default;
+    MoleculeStorage() : light_molecules_(), heavy_molecules_() {}
 
     void add_heavy(const HeavyMolecule& molecule) {
         heavy_molecules_.push(molecule);
@@ -111,6 +112,8 @@ static const size_t GRID_RESOLUTION = 64;
 
 struct GasVolume {
     GasVolume() = default;
+    GasVolume(const GasVolume& volume) = default;
+    GasVolume& operator=(GasVolume& volume) = default;
 
     void add_light_molecule(const LightMolecule& molecule) {
         molecules_.add_light(molecule);
@@ -135,27 +138,27 @@ struct GasVolume {
     size_t molecule_count() const { return molecules_.size(); }
     Molecule& get_molecule(size_t id) const { return molecules_[id]; }
 
-   private:
     void react(Molecule& alpha, Molecule& beta);
 
+   private:
     void update_stats();
 
     Molecule** find_cell(Vec2d position) {
         int x_coord = (int)floor(position.get_x() * (double)GRID_RESOLUTION);
 
         if (x_coord < 0) x_coord = 0;
-        if (x_coord >= GRID_RESOLUTION) x_coord = GRID_RESOLUTION - 1;
+        if ((size_t)x_coord >= GRID_RESOLUTION) x_coord = GRID_RESOLUTION - 1;
 
         int y_coord = (int)floor(position.get_y() * (double)GRID_RESOLUTION);
 
         if (y_coord < 0) y_coord = 0;
-        if (y_coord >= GRID_RESOLUTION) y_coord = GRID_RESOLUTION - 1;
+        if ((size_t)y_coord >= GRID_RESOLUTION) y_coord = GRID_RESOLUTION - 1;
 
         return grid_[x_coord][y_coord];
     }
 
     void unpin(Molecule& molecule) {
-        molecule.round();
+        pressure_ += molecule.round();
         Molecule** cell = find_cell(molecule.get_position());
 
         unsigned left = 0;
@@ -178,7 +181,7 @@ struct GasVolume {
     }
 
     void pin(Molecule& molecule) {
-        molecule.round();
+        pressure_ += molecule.round();
         Molecule** cell = find_cell(molecule.get_position());
 
         unsigned left = 0;
@@ -201,7 +204,7 @@ struct GasVolume {
     bool valve_in_open_ = false;
     bool valve_out_open_ = false;
 
-    MoleculeStorage molecules_;
+    MoleculeStorage molecules_ = {};
     double energy_ = 0.0;
     double temperature_ = 0.0;
     double pressure_ = 0.0;

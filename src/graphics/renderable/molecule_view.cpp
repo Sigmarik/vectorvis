@@ -56,6 +56,8 @@ void ValveControlButton::on_push(Interaction interaction) {
         case VALVE_OUT:
             volume_.set_out_value(true);
             break;
+        default:
+            break;
     }
 }
 
@@ -66,6 +68,8 @@ void ValveControlButton::on_release(Interaction interaction) {
             break;
         case VALVE_OUT:
             volume_.set_out_value(false);
+            break;
+        default:
             break;
     }
 }
