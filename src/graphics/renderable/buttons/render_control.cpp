@@ -2,8 +2,8 @@
 
 RenderControlButton::RenderControlButton(RayTracingPlane& controlled_plane,
                                          const Vec2d& center, const Vec2d& size,
-                                         const char* text, const Vec3d& color)
-    : Button(center, size, text, color), plane_(controlled_plane) {}
+                                         const char* text)
+    : Button(center, size, text), plane_(controlled_plane) {}
 
 void ProgressResetButton::on_push(Interaction interaction) {
     plane_.reset_progress();

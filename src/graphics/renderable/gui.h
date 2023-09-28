@@ -22,11 +22,19 @@ struct Panel : public Interactive {
 
     void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
 
-    void add_child(Renderable& child);
-    void add_interactive_child(Interactive& child);
+    void add_child(Renderable& child, Anchor anchor = Anchor());
+    void add_interactive_child(Interactive& child, Anchor anchor = Anchor());
+
+    void focus_child(const Interactive& child);
 
     bool is_movable() const;
     void set_movable(bool movable);
+
+    bool is_orderable() const { return orderable_; }
+    void set_orderable(bool orderable) { orderable_ = false; }
+
+    void set_design(DesignId id) { design_ = id; }
+    DesignId get_design() const { return design_; }
 
    private:
     Mat33d get_matrix();
@@ -39,14 +47,15 @@ struct Panel : public Interactive {
     Stack<Interactive*> interactive_children_;
 
     Vec2d last_cursor_position_ = Vec2d();
+    DesignId design_ = DSGN_PANEL_DEFAULT;
     bool movable_ = false;
+    bool orderable_ = false;
 };
 
 static const Vec3d DEFAULT_BUTTON_COLOR(0.24, 0.25, 0.33);
 
 struct Button : public Interactive {
-    Button(const Vec2d& center, const Vec2d& size, const char* text = "Button",
-           const Vec3d& color = DEFAULT_BUTTON_COLOR);
+    Button(const Vec2d& center, const Vec2d& size, const char* text = "Button");
     Button(const Button& button) = default;
     virtual ~Button() = default;
 
@@ -60,10 +69,12 @@ struct Button : public Interactive {
     virtual void on_push(Interaction interaction);
     virtual void on_release(Interaction interaction);
 
-    void set_text(const char* text);
-    void set_color(const Vec3d& color);
+    void set_text(const char* text) { text_ = text; }
 
     bool is_pushed();
+
+    void set_design(DesignId id) { design_ = id; }
+    DesignId get_design() { return design_; }
 
    private:
     void update_timers();
@@ -72,13 +83,13 @@ struct Button : public Interactive {
                                 const AssetShelf& assets);
 
     const char* text_;
-    Vec3d color_;
 
     bool is_pushed_ = false;
     bool is_hovered_ = false;
     unsigned long long hover_timer_ = 0.0;
     unsigned long long push_timer_ = 0.0;
     unsigned long long last_upd_time_ = 0.0;
+    DesignId design_ = DSGN_BUTTON_DEFAULT;
 };
 
 struct DragButton : public Button {

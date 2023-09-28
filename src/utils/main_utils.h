@@ -14,6 +14,7 @@
 
 #include "common_utils.h"
 #include "geometry/matrix.h"
+#include "src/graphics/renderable/gui.h"
 #include "src/graphics/renderable/ray_tracing.h"
 #include "src/graphics/renderable/renderable.h"
 
@@ -72,5 +73,7 @@ static const Plane PLANES[] = {
         (Material){
             .color = Vec3d(0.1, 0.1, 1.0), .roughness = 0.03, .specular = 1.0}),
 };
+
+void construct_gui(Panel& panel);
 
 #endif

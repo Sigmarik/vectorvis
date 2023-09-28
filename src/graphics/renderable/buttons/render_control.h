@@ -17,8 +17,7 @@
 
 struct RenderControlButton : public Button {
     RenderControlButton(RayTracingPlane& controlled_plane, const Vec2d& center,
-                        const Vec2d& size, const char* text = "Button",
-                        const Vec3d& color = DEFAULT_BUTTON_COLOR);
+                        const Vec2d& size, const char* text = "Button");
 
    protected:
     RayTracingPlane& plane_;

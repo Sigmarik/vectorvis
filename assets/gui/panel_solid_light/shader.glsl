@@ -45,8 +45,6 @@ void main() {
 
     vec2 pos = pixel_coord * 0.1;
 
-    float stripe_value = (pos.x + pos.y + time) * 0.3;
-    bool stripe_mask = (stripe_value - floor(stripe_value)) > 0.5;
     float mouse_aura = max(0.0, 1.0 - length(screen_coord - mouse) / 300.0);
     float border_aura =
         max(0.0,
@@ -68,10 +66,9 @@ void main() {
     if (on_border != 0)
         color = vec3(0, 0.0, 0.0);
     else
-        color = vec3(0.22, 0.23, 0.32) * (stripe_mask ? 1.0 : 0.95) *
-                step(0.9, 1.06, mouse_aura);
+        color = vec3(0.22, 0.23, 0.32);
 
-    color *= 1.0 - 0.2 * border_aura * border_aura * border_aura;
+    color *= 1.0 - 0.1 * border_aura * border_aura * border_aura;
 
     gl_FragColor = vec4(color, 1.0);
 

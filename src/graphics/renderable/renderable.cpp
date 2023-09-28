@@ -18,12 +18,12 @@ void DesignDescriptor::load(const char* path) {
     shader.setParameter("atlas", atlas);
 }
 
+#define DESIGN(name, path) designs[DSGN_##name].load(path);
+
 AssetShelf::AssetShelf()
-    : shaders_available(sf::Shader::isAvailable()),
-      font(),
-      button_design(),
-      panel_design() {
+    : shaders_available(sf::Shader::isAvailable()), font() {
     font.loadFromFile("assets/fonts/main.ttf");
-    button_design.load("assets/gui/button");
-    panel_design.load("assets/gui/panel");
+#include "designs.hpp"
 }
+
+#undef DESIGN

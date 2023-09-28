@@ -14,7 +14,6 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window.hpp>
 
-#include "graphics/renderable/arrow.h"
 #include "graphics/renderable/molecule_view.h"
 #include "graphics/renderable/plot.h"
 #include "io/main_io.h"
@@ -49,20 +48,52 @@ int main(const int argc, char** argv) {
 
     window.setSize(sf::Vector2u(800, 600));
 
+    Panel root_panel(Vec2d(0.0, 0.0), Vec2d(1.0, 1.0));
+    root_panel.set_design(DSGN_PANEL_DEBUG);
+
+    Panel menu_panel(Vec2d(0.0, -0.25), Vec2d(1.0, 0.5));
+    menu_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
+
+    Panel subwindow_panel(Vec2d(0.0, 0.0), Vec2d(-1.0, 0.5));
+    subwindow_panel.set_orderable(true);
+    root_panel.add_interactive_child(
+        subwindow_panel, Anchor(Vec2d(1.0, -0.25), Vec2d(-1.0, 0.5)));
+
+    Panel tool_panel(Vec2d(1.0, 0.0), Vec2d(2.0, 0.5));
+    tool_panel.set_design(DSGN_PANEL_SOLID_DARK);
+    root_panel.add_interactive_child(
+        tool_panel, Anchor(Vec2d(-0.5, -0.25), Vec2d(0.0, 0.5)));
+
+    Button file_btn(Vec2d(0.5, 0.0), Vec2d(1.0, 1.0), "File");
+    Button edit_btn(Vec2d(1.5, 0.0), Vec2d(1.0, 1.0), "Edit");
+    Button selection_btn(Vec2d(2.5, 0.0), Vec2d(1.0, 1.0), "Select");
+    menu_panel.add_interactive_child(file_btn,
+                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
+    menu_panel.add_interactive_child(edit_btn,
+                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
+    menu_panel.add_interactive_child(selection_btn,
+                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
+
+    root_panel.add_interactive_child(menu_panel,
+                                     Anchor(Vec2d(0.0, 0.5), Vec2d(1.0, 0.0)));
+
     MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
     static GasVolume simulation;
     MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0), Vec2d(4.0, 4.0));
-    Panel sim_panel(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
+    Panel sim_border(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
 
     simulation.add_light_molecule(
         LightMolecule(Vec2d(0.0, 0.0), Vec2d(1.0, M_PI)));
     simulation.add_light_molecule(
         LightMolecule(Vec2d(1.0, 0.0), Vec2d(-1.01, M_PI + 0.01)));
 
-    sim_panel.add_child(simulation_view);
+    sim_border.add_child(simulation_view);
 
-    Panel menu_panel(Vec2d(0.0, 0.0), Vec2d(7.0, 5.0));
+    Panel simulation_panel(Vec2d(0.0, 0.0), Vec2d(7.0, 5.0));
+
+    simulation_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
+
     ValveControlButton input_button(simulation, VALVE_IN, Vec2d(2.25, 2.0),
                                     Vec2d(1.0, 0.5), "Inflate");
     ValveControlButton output_button(simulation, VALVE_OUT, Vec2d(2.25, 1.25),
@@ -76,20 +107,21 @@ int main(const int argc, char** argv) {
     Plot pressure_plt(Vec2d(0.0, 0.0), Vec2d(2.0, 0.75), "Pres");
     pres_panel.add_child(pressure_plt);
 
-    DragButton menu_move_button(menu_panel);
+    DragButton menu_move_button(simulation_panel);
 
-    menu_panel.add_interactive_child(input_button);
-    menu_panel.add_interactive_child(output_button);
-    menu_panel.add_interactive_child(menu_move_button);
-    menu_panel.add_interactive_child(sim_panel);
-    menu_panel.add_interactive_child(temp_panel);
-    menu_panel.add_interactive_child(pres_panel);
+    simulation_panel.add_interactive_child(input_button);
+    simulation_panel.add_interactive_child(output_button);
+    simulation_panel.add_interactive_child(sim_border);
+    simulation_panel.add_interactive_child(temp_panel);
+    simulation_panel.add_interactive_child(pres_panel);
+
+    subwindow_panel.add_interactive_child(simulation_panel);
 
     AssetShelf assets;
 
     unsigned long long last_tick_time = WorldTimer::get();
-
     unsigned long long last_plt_update = WorldTimer::get();
+    unsigned long long simulation_time = WorldTimer::get();
 
     unsigned tick = 0;
     while (window.isOpen()) {
@@ -107,25 +139,36 @@ int main(const int argc, char** argv) {
 
         sf::Event event;
         while (window.pollEvent(event)) {
-            menu_panel.on_event(
+            root_panel.on_event(
                 render_stack,
                 (Interaction){
                     .event = &event, .window = &window, .obstructed = false});
             if (event.type == sf::Event::Closed) window.close();
         }
 
+        root_panel.set_size(Vec2d((double)window.getSize().x / 50.0,
+                                  (double)window.getSize().y / 50.0));
+
         window.clear();
 
-        menu_panel.render(render_stack, window, assets);
+        root_panel.render(render_stack, window, assets);
 
         window.display();
 
         render_stack.pop();
 
-        double phys_dt = 0.0;
-        while (phys_dt < delta_time * PHYS_SIM_SPEED) {
+        unsigned long long target_phys_time =
+            (unsigned long long)((double)last_tick_time * PHYS_SIM_SPEED);
+        for (unsigned iteration = 0;
+             iteration < MAX_ITER_COUNT && simulation_time < target_phys_time;
+             ++iteration) {
             simulation.tick(PHYS_TIME_STEP);
-            phys_dt += PHYS_TIME_STEP;
+            simulation_time +=
+                (unsigned long long)ceil(PHYS_TIME_STEP * 1000000.0);
+        }
+
+        if (simulation_time < target_phys_time) {
+            simulation_time = target_phys_time;
         }
 
         if (WorldTimer::get() - last_plt_update > 100000) {

@@ -9,7 +9,9 @@ Molecule::Molecule(const Vec2d& position, const Vec2d& velocity,
 static const double VOLUME_WIDTH = 1.0;
 static const double VOLUME_HEIGHT = 1.0;  // TODO: Replace with variable piston
 
-static const double GRAVITY = 0.0;  // 20.0;
+#define TEST_COLLISIONS 1
+
+static const double GRAVITY = TEST_COLLISIONS ? 20.0 : 0.0;
 
 void Molecule::tick(GasVolume& volume, double delta_time) {
     velocity_ += Vec2d(0.0, GRAVITY * delta_time);
@@ -40,8 +42,8 @@ double Molecule::round() {
 
 static const double MOLECULE_RADIUS = 0.01;
 
-static const double BOUNCINESS = 1.0;          // 0.95;
-static const double REACTION_THRESHOLD = 1.0;  // INFINITY;
+static const double BOUNCINESS = TEST_COLLISIONS ? 0.95 : 1.0;
+static const double REACTION_THRESHOLD = TEST_COLLISIONS ? INFINITY : 1.0;
 
 void Molecule::collide(Molecule& molecule, GasVolume& volume) {
     double distance = (position_ - molecule.position_).length();
@@ -86,10 +88,11 @@ void GasVolume::tick(double delta_time) {
     pressure_ = 0.0;
 
     if (valve_in_open_) {
-        add_light_molecule(
-            LightMolecule(Vec2d((double)(rand() % 1024) / 1024.0, 0.0),
-                          Vec2d::radial(rand(), 1.0)));
-        // valve_in_open_ = false;
+        for (unsigned id = 0; id < (unsigned)(delta_time * 1000.0); ++id) {
+            add_light_molecule(
+                LightMolecule(Vec2d((double)(rand() % 1024) / 1024.0, 0.0),
+                              Vec2d::radial(rand(), 1.0)));
+        }
     }
 
     if (valve_out_open_ && molecules_.size() > 0) {

@@ -107,7 +107,7 @@ struct MoleculeStorage {
     Stack<HeavyMolecule> heavy_molecules_;
 };
 
-static const size_t MAX_CELL_CAPACITY = 20;
+static const size_t MAX_CELL_CAPACITY = 2;
 static const size_t GRID_RESOLUTION = 64;
 
 struct GasVolume {
@@ -161,20 +161,17 @@ struct GasVolume {
         pressure_ += molecule.round();
         Molecule** cell = find_cell(molecule.get_position());
 
-        unsigned left = 0;
-        unsigned right = MAX_CELL_CAPACITY;
-        while (right - left > 1) {
-            unsigned mid = (left + right) / 2;
-            if (cell[mid] != NULL)
-                left = mid;
-            else
-                right = mid;
+        unsigned space = 0;
+        for (; space < MAX_CELL_CAPACITY; ++space) {
+            if (cell[space] == NULL) break;
         }
 
-        for (unsigned id = 0; id < right; ++id) {
+        if (space == 0) return;
+
+        for (unsigned id = 0; id < space; ++id) {
             if (&molecule == cell[id]) {
-                cell[id] = cell[left];
-                cell[left] = NULL;
+                cell[id] = cell[space - 1];
+                cell[space - 1] = NULL;
                 return;
             }
         }
@@ -184,18 +181,13 @@ struct GasVolume {
         pressure_ += molecule.round();
         Molecule** cell = find_cell(molecule.get_position());
 
-        unsigned left = 0;
-        unsigned right = MAX_CELL_CAPACITY;
-        while (right - left > 1) {
-            unsigned mid = (left + right) / 2;
-            if (cell[mid] != NULL)
-                left = mid;
-            else
-                right = mid;
+        unsigned space = 0;
+        for (; space < MAX_CELL_CAPACITY; ++space) {
+            if (cell[space] == NULL) break;
         }
 
-        if (left < MAX_CELL_CAPACITY - 1) {
-            cell[left + 1] = &molecule;
+        if (space <= MAX_CELL_CAPACITY - 1) {
+            cell[space] = &molecule;
         }
     }
 

@@ -27,14 +27,26 @@ struct DesignDescriptor {
     sf::Shader shader = sf::Shader();
 };
 
+#define DESIGN(name, path) DSGN_##name,
+
+enum DesignId {
+#include "designs.hpp"
+};
+
+#undef DESIGN
+#define DESIGN(name, path) +1
+static const unsigned DESIGN_COUNT = 0
+#include "designs.hpp"
+    ;
+#undef DESIGN
+
 struct AssetShelf final {
     AssetShelf();
 
     bool shaders_available = false;
 
     sf::Font font;
-    DesignDescriptor button_design;
-    DesignDescriptor panel_design;
+    DesignDescriptor designs[DESIGN_COUNT];
 };
 
 struct Renderable {
