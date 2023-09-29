@@ -80,7 +80,8 @@ int main(const int argc, char** argv) {
     MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
     static GasVolume simulation;
-    MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0), Vec2d(4.0, 4.0));
+    MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0),
+                                 Vec2d(3.95, 3.95));
     Panel sim_border(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
 
     simulation.add_light_molecule(

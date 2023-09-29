@@ -63,33 +63,32 @@ void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
         set_center(get_center() + Vec2d(shift.get_x(), shift.get_y()));
     }
 
+    Vec2d mouse_pos =
+        Vec2d((double)sf::Mouse::getPosition(*interaction.window).x /
+                  interaction.window->getSize().x,
+              (double)sf::Mouse::getPosition(*interaction.window).y /
+                  interaction.window->getSize().y);
+
     stack.push(get_matrix());
     for (size_t child_id = interactive_children_.size() - 1;
          child_id != (size_t)-1; --child_id) {
-        Vec2d mouse_pos = Vec2d((double)interaction.event->mouseButton.x /
-                                    interaction.window->getSize().x,
-                                (double)interaction.event->mouseButton.y /
-                                    interaction.window->getSize().y);
-
         Interactive& child = *interactive_children_[child_id];
 
         child.apply_anchor(vis_size_);
         child.on_event(stack, interaction);
 
-        bool overlaps = child.is_under(stack, mouse_pos);
+        bool overlap = child.is_under(stack, mouse_pos);
 
-        if (orderable_ && !interaction.obstructed && overlaps &&
+        if (orderable_ && !interaction.obstructed && overlap &&
             interaction.event->type == sf::Event::MouseButtonPressed)
             focus_child(child);
 
-        interaction.obstructed = interaction.obstructed || overlaps;
+        interaction.obstructed = interaction.obstructed || overlap;
     }
     stack.pop();
 }
 
-void Panel::add_child(Renderable& child, Anchor anchor) {
-    children_.push(&child);
-}
+void Panel::add_child(Renderable& child) { children_.push(&child); }
 
 void Panel::add_interactive_child(Interactive& child, Anchor anchor) {
     child.set_anchor(anchor);

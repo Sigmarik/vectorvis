@@ -14,6 +14,10 @@
 
 #include "interactive.h"
 
+/**
+ * @brief Window-like container widget
+ *
+ */
 struct Panel : public Interactive {
     explicit Panel(const Vec2d& center, const Vec2d& size);
 
@@ -22,21 +26,78 @@ struct Panel : public Interactive {
 
     void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
 
-    void add_child(Renderable& child, Anchor anchor = Anchor());
+    /**
+     * @brief Add visual only child to the panel
+     *
+     * @param child
+     */
+    void add_child(Renderable& child);
+
+    /**
+     * @brief Add interactive child to the panel
+     *
+     * @param child
+     * @param anchor
+     */
     void add_interactive_child(Interactive& child, Anchor anchor = Anchor());
 
+    /**
+     * @brief Reorder panel's children to render the given child on top
+     *
+     * @param child
+     */
     void focus_child(const Interactive& child);
 
+    /**
+     * @brief Get if the panel copies mouse movements
+     *
+     * @return true
+     * @return false
+     */
     bool is_movable() const;
+
+    /**
+     * @brief Set if the panel should copy mouse movements
+     *
+     * @param movable
+     */
     void set_movable(bool movable);
 
+    /**
+     * @brief Get if the panel can reorder its children
+     *
+     * @return true
+     * @return false
+     */
     bool is_orderable() const { return orderable_; }
-    void set_orderable(bool orderable) { orderable_ = false; }
 
+    /**
+     * @brief Set if the object's children should be focusable by clicking
+     *
+     * @param orderable
+     */
+    void set_orderable(bool orderable) { orderable_ = orderable; }
+
+    /**
+     * @brief Set panel design id
+     *
+     * @param id
+     */
     void set_design(DesignId id) { design_ = id; }
+
+    /**
+     * @brief Get currently set panel design id
+     *
+     * @return DesignId
+     */
     DesignId get_design() const { return design_; }
 
    private:
+    /**
+     * @brief Get panel matrix
+     *
+     * @return Mat33d
+     */
     Mat33d get_matrix();
 
     void fill_shader_parameters(MatrixStack<Mat33d>& stack,
@@ -54,6 +115,10 @@ struct Panel : public Interactive {
 
 static const Vec3d DEFAULT_BUTTON_COLOR(0.24, 0.25, 0.33);
 
+/**
+ * @brief Clickable widget
+ *
+ */
 struct Button : public Interactive {
     Button(const Vec2d& center, const Vec2d& size, const char* text = "Button");
     Button(const Button& button) = default;
@@ -66,14 +131,47 @@ struct Button : public Interactive {
 
     void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
 
+    /**
+     * @brief Process button push
+     *
+     * @param interaction
+     */
     virtual void on_push(Interaction interaction);
+
+    /**
+     * @brief Process button release
+     *
+     * @param interaction
+     */
     virtual void on_release(Interaction interaction);
 
+    /**
+     * @brief Set button text
+     *
+     * @param text
+     */
     void set_text(const char* text) { text_ = text; }
 
+    /**
+     * @brief Get button push state
+     *
+     * @return true if button in currently held
+     * @return false otherwise
+     */
     bool is_pushed();
 
+    /**
+     * @brief Set button design id
+     *
+     * @param id
+     */
     void set_design(DesignId id) { design_ = id; }
+
+    /**
+     * @brief Get currently used button design id
+     *
+     * @return DesignId
+     */
     DesignId get_design() { return design_; }
 
    private:

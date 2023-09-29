@@ -16,8 +16,6 @@ void Interactive::on_event(MatrixStack<Mat33d>& stack,
 }
 
 void Interactive::apply_anchor(const Vec2d& parent_size) {
-    // return;
-
     bool split_x = abs(anchor_.get_size().get_x()) > 1e-5;
     bool split_y = abs(anchor_.get_size().get_y()) > 1e-5;
 
@@ -46,20 +44,9 @@ void Interactive::apply_anchor(const Vec2d& parent_size) {
                             : 1.0);
     vis_center_ = new_center + center_ * vis_size_;
     vis_size_ = vis_size_ * size_;
-
-    // Vec2d delta =
-    //     Vec2d(lerp(1.0, parent_size.get_x(), anchor_.get_size().get_x()),
-    //           lerp(1.0, parent_size.get_y(), anchor_.get_size().get_y()));
-    // vis_size_ = size_ * delta;
-    // vis_center_ = anchor_.get_center() * parent_size + center_ * delta;
-    // vis_size_ = size_;
-    // vis_center_ = center_;
 }
 
 bool Interactive::is_under(const MatrixStack<Mat33d>& stack, const Vec2d& pos) {
-    Vec3d center = extrude(vis_center_);
-    Vec3d size = extrude(vis_size_);
-
     // clang-format off
     Vec2d tl = get_corner(TOP_LEFT,     stack);
     Vec2d tr = get_corner(TOP_RIGHT,    stack);
@@ -94,12 +81,4 @@ unsigned long long WorldTimer::get() {
 
     return (unsigned long long)instance->clock_.getElapsedTime()
         .asMicroseconds();
-}
-
-Mat33d Anchor::get_matrix(Vec2d parent_size) {
-    Vec2d shift = center_ * parent_size;
-    Vec2d scale = Vec2d(lerp(1.0, parent_size.get_x(), size_.get_x()),
-                        lerp(1.0, parent_size.get_y(), size_.get_y()));
-    return Mat33d(scale.get_x(), 0.0, shift.get_x(), 0.0, scale.get_y(),
-                  shift.get_y(), 0.0, 0.0, 1.0);
 }

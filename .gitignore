@@ -8,3 +8,4 @@ run/*
 .vscode/*
 dev_docs/*
 scripts
+doxygen/*

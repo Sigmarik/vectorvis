@@ -40,6 +40,10 @@ static const unsigned DESIGN_COUNT = 0
     ;
 #undef DESIGN
 
+/**
+ * @brief Asset storage
+ *
+ */
 struct AssetShelf final {
     AssetShelf();
 
@@ -49,8 +53,20 @@ struct AssetShelf final {
     DesignDescriptor designs[DESIGN_COUNT];
 };
 
+/**
+ * @brief Visible object
+ *
+ */
 struct Renderable {
     virtual ~Renderable() = default;
+
+    /**
+     * @brief Draw the object
+     *
+     * @param stack object transform
+     * @param target canvas on which to draw the object
+     * @param assets assets to use
+     */
     virtual void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
                         const AssetShelf& assets) = 0;
 };

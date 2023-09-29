@@ -68,7 +68,7 @@ void main() {
     else
         color = vec3(0.22, 0.23, 0.32) * 0.7;
 
-    color *= 1.0 - 0.1 * border_aura * border_aura * border_aura;
+    color *= 1.0 - 0.2 * pow(border_aura, 5.0);
 
     gl_FragColor = vec4(color, 1.0);
 
