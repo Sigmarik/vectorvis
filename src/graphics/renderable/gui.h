@@ -26,6 +26,8 @@ struct Panel : public Interactive {
 
     void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
 
+    void tick() override;
+
     /**
      * @brief Add visual only child to the panel
      *
@@ -93,13 +95,6 @@ struct Panel : public Interactive {
     DesignId get_design() const { return design_; }
 
    private:
-    /**
-     * @brief Get panel matrix
-     *
-     * @return Mat33d
-     */
-    Mat33d get_matrix();
-
     void fill_shader_parameters(MatrixStack<Mat33d>& stack,
                                 sf::RenderTarget& target,
                                 const AssetShelf& assets);

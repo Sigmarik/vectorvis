@@ -15,9 +15,6 @@ void Panel::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
                    const AssetShelf& assets) {
     static sf::VertexArray shape(sf::PrimitiveType::Quads, 4);
 
-    Vec3d center = extrude(vis_center_);
-    Vec3d size = extrude(vis_size_);
-
     // clang-format off
     shape[0].position = to_Vector2f(get_corner(TOP_LEFT,     stack));
     shape[1].position = to_Vector2f(get_corner(TOP_RIGHT,    stack));
@@ -69,15 +66,21 @@ void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
               (double)sf::Mouse::getPosition(*interaction.window).y /
                   interaction.window->getSize().y);
 
+    //* Uncomment for fun!
+    // if (is_under(stack, mouse_pos)) {
+    //     set_design(DSGN_PANEL_DEBUG);
+    // }
+
     stack.push(get_matrix());
     for (size_t child_id = interactive_children_.size() - 1;
          child_id != (size_t)-1; --child_id) {
         Interactive& child = *interactive_children_[child_id];
 
         child.apply_anchor(vis_size_);
-        child.on_event(stack, interaction);
 
         bool overlap = child.is_under(stack, mouse_pos);
+
+        child.on_event(stack, interaction);
 
         if (orderable_ && !interaction.obstructed && overlap &&
             interaction.event->type == sf::Event::MouseButtonPressed)
@@ -86,6 +89,13 @@ void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
         interaction.obstructed = interaction.obstructed || overlap;
     }
     stack.pop();
+}
+
+void Panel::tick() {
+    for (size_t child_id = 0; child_id < interactive_children_.size();
+         ++child_id) {
+        interactive_children_[child_id]->tick();
+    }
 }
 
 void Panel::add_child(Renderable& child) { children_.push(&child); }
@@ -111,14 +121,6 @@ void Panel::set_movable(bool movable) {
     movable_ = movable;
     last_cursor_position_.set_x((double)sf::Mouse::getPosition().x);
     last_cursor_position_.set_y((double)sf::Mouse::getPosition().y);
-}
-
-Mat33d Panel::get_matrix() {
-    // clang-format off
-    return Mat33d(1.0, 0.0, vis_center_.get_x(),
-                  0.0, 1.0, vis_center_.get_y(),
-                  0.0, 0.0, 1.0);
-    // clang-format on
 }
 
 void Panel::fill_shader_parameters(MatrixStack<Mat33d>& stack,
@@ -209,6 +211,12 @@ void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
                         interaction.window->getSize().x,
                     (double)sf::Mouse::getPosition(*interaction.window).y /
                         interaction.window->getSize().y);
+
+    //* Uncomment for fun!
+    // if (is_under(stack, mouse_pos) && !interaction.obstructed) {
+    //     set_design(DSGN_PANEL_DEBUG);
+    // }
+
     bool has_mouse_over = is_under(stack, mouse_pos) && !interaction.obstructed;
 
     if (is_hovered_ != has_mouse_over) {
@@ -291,7 +299,7 @@ void Button::fill_shader_parameters(MatrixStack<Mat33d>& stack,
 }
 
 DragButton::DragButton(Panel& panel)
-    : Button(Vec2d(0.0, 0.0), Vec2d(1.0, 0.2), ""), panel_(panel) {
+    : Button(Vec2d(0.0, -0.1), Vec2d(1.0, 0.2), ""), panel_(panel) {
     set_design(DSGN_BUTTON_DRAG);
     panel.add_interactive_child(*this,
                                 Anchor(Vec2d(0.0, 0.5), Vec2d(1.0, 0.0)));

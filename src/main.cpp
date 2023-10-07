@@ -14,8 +14,11 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window.hpp>
 
+#include "graphics/renderable/buttons/image_scrollbar.h"
+#include "graphics/renderable/image_view.h"
 #include "graphics/renderable/molecule_view.h"
 #include "graphics/renderable/plot.h"
+#include "graphics/renderable/visuals/fps_meter.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
 #include "logger/logger.h"
@@ -48,25 +51,44 @@ int main(const int argc, char** argv) {
 
     window.setSize(sf::Vector2u(800, 600));
 
-    Panel root_panel(Vec2d(0.0, 0.0), Vec2d(1.0, 1.0));
+    static Panel root_panel(Vec2d(0.0, 0.0), Vec2d(1.0, 1.0));
     root_panel.set_design(DSGN_PANEL_DEBUG);
 
-    Panel menu_panel(Vec2d(0.0, -0.25), Vec2d(1.0, 0.5));
+    static Panel menu_panel(Vec2d(0.0, -0.25), Vec2d(1.0, 0.5));
     menu_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
 
-    Panel subwindow_panel(Vec2d(0.0, 0.0), Vec2d(-1.0, 0.5));
+    static Panel subwindow_panel(Vec2d(0.0, 0.0), Vec2d(-1.0, 0.5));
     subwindow_panel.set_orderable(true);
     root_panel.add_interactive_child(
         subwindow_panel, Anchor(Vec2d(1.0, -0.25), Vec2d(-1.0, 0.5)));
 
-    Panel tool_panel(Vec2d(1.0, 0.0), Vec2d(2.0, 0.5));
+    static Panel image_panel(Vec2d(0.0, 0.0), Vec2d(13.0, 13.0));
+    image_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
+
+    subwindow_panel.add_interactive_child(image_panel);
+
+    static DragButton image_drag(image_panel);
+
+    static ImageView editor(Vec2d(0.0, 0.0), Vec2d(12.0, 12.0),
+                            "assets/example.bmp");
+    image_panel.add_interactive_child(editor);
+
+    static ImageScrollbar horiz_scrollbar(Vec2d(0.0, -(6.0 + SCROLLBAR_WIDTH)),
+                                          12.0, editor, SCRLLBR_HORIZONTAL);
+    image_panel.add_interactive_child(horiz_scrollbar);
+
+    static ImageScrollbar vert_scrollbar(Vec2d(6.0 + SCROLLBAR_WIDTH, 0.0),
+                                         12.0, editor, SCRLLBR_VERTICAL);
+    image_panel.add_interactive_child(vert_scrollbar);
+
+    static Panel tool_panel(Vec2d(1.0, 0.0), Vec2d(2.0, 0.5));
     tool_panel.set_design(DSGN_PANEL_SOLID_DARK);
     root_panel.add_interactive_child(
         tool_panel, Anchor(Vec2d(-0.5, -0.25), Vec2d(0.0, 0.5)));
 
-    Button file_btn(Vec2d(0.5, 0.0), Vec2d(1.0, 1.0), "File");
-    Button edit_btn(Vec2d(1.5, 0.0), Vec2d(1.0, 1.0), "Edit");
-    Button selection_btn(Vec2d(2.5, 0.0), Vec2d(1.0, 1.0), "Select");
+    static Button file_btn(Vec2d(0.5, 0.0), Vec2d(1.0, 1.0), "File");
+    static Button edit_btn(Vec2d(1.5, 0.0), Vec2d(1.0, 1.0), "Edit");
+    static Button selection_btn(Vec2d(2.5, 0.0), Vec2d(1.0, 1.0), "Select");
     menu_panel.add_interactive_child(file_btn,
                                      Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
     menu_panel.add_interactive_child(edit_btn,
@@ -74,10 +96,14 @@ int main(const int argc, char** argv) {
     menu_panel.add_interactive_child(selection_btn,
                                      Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
 
+    static FpsMeter fps_meter(Vec2d(-0.1, -0.1), 1.0);
+    menu_panel.add_interactive_child(fps_meter,
+                                     Anchor(Vec2d(0.5, 0.5), Vec2d(0.0, 0.0)));
+
     root_panel.add_interactive_child(menu_panel,
                                      Anchor(Vec2d(0.0, 0.5), Vec2d(1.0, 0.0)));
 
-    MatrixStack<Mat33d> render_stack(Mat33d(1.0));
+    static MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
     static GasVolume simulation;
     MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0),
@@ -156,6 +182,8 @@ int main(const int argc, char** argv) {
 
         window.display();
 
+        root_panel.tick();
+
         render_stack.pop();
 
         unsigned long long target_phys_time =
@@ -179,10 +207,10 @@ int main(const int argc, char** argv) {
         }
     }
 
-    //! ERROR: For some reason, the SFML likes to set errno to 11 (EAGAIN),
-    //!     but works just fine... Lets just assume it's some weird
-    //!     SFML bug and not the reason why the entirety of my drive will be
-    //!     gone within a few launches.
+    //! ERROR: For some reason, SFML likes to set errno to 11 (EAGAIN),
+    //!     while working just fine... Lets just assume it's some weird
+    //!     SFML bug and not the reason why the entirety of my hard drive will
+    //!     be gone within a few launches.
 
     if (errno == 11) errno = 0;
 

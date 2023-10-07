@@ -2,7 +2,7 @@ PYTHON = python3
 CC = g++
 PROFILER = valgrind
 
-CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -Ofast -pie -pthread				\
+CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O3 -pie -pthread				    \
 -Wall -Wextra -Weffc++				 	 											\
 -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations				\
 -Wcast-align -Wchar-subscripts -Wconditionally-supported							\
@@ -69,9 +69,14 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/graphics/renderable/ray_tracing_plane.o			\
 	src/graphics/renderable/ray_tracing.o				\
 	src/graphics/renderable/buttons/render_control.o	\
+	src/graphics/renderable/buttons/scrollbar.o			\
+	src/graphics/renderable/buttons/image_scrollbar.o	\
 	src/graphics/renderable/molecule_view.o				\
 	src/graphics/renderable/plot.o						\
+	src/graphics/renderable/image_view.o				\
+	src/graphics/renderable/visuals/fps_meter.o			\
 	src/simulation/simulation.o							\
+	src/editor_tools/tools.o							\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
