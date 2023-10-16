@@ -226,6 +226,8 @@ void PencilTool::confirm(ImageView& view) {
 
 void StripTool::render(const MatrixStack<Mat33d>& stack,
                        sf::RenderTarget& target, const ImageView& view) {
+    if (points_.size() == 0) return;
+
     sf::VertexArray vertices(sf::PrimitiveType::LinesStrip, 0);
 
     for (size_t id = 0; id < points_.size(); ++id) {
@@ -237,8 +239,9 @@ void StripTool::render(const MatrixStack<Mat33d>& stack,
     }
 
     sf::Vertex last_point;
-    last_point.position =
-        to_Vector2f(stack.top() * extrude(view.to_scene_coords(current_)));
+    last_point.position = to_Vector2f(
+        stack.top() *
+        extrude(view.to_scene_coords(looped_ ? points_[0] : current_)));
     last_point.color = PREVIEW_COLOR;
     vertices.append(last_point);
 
@@ -255,6 +258,10 @@ void StripTool::on_sec(ButtonState state, Vec2d pos, ImageView& view) {
     if (state == BTN_DOWN && points_.size() > 0) points_.pop();
 }
 
+void StripTool::on_modifier1(ButtonState state, Vec2d pos, ImageView& view) {
+    looped_ = state == BTN_DOWN;
+}
+
 void StripTool::on_move(Vec2d pos, ImageView& view) { current_ = pos; }
 
 void StripTool::cancel() { points_.clear(); }
@@ -263,6 +270,10 @@ void StripTool::confirm(ImageView& view) {
     for (size_t id = 0; id + 1 < points_.size(); ++id) {
         draw_thick_line(view, points_[id], points_[id + 1], thickness_);
     }
+
+    if (looped_)
+        draw_thick_line(view, points_[0], points_[points_.size() - 1],
+                        thickness_);
 
     points_.clear();
 }

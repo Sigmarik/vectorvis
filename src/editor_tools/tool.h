@@ -114,6 +114,7 @@ struct StripTool : Tool {
 
     void on_main(ButtonState state, Vec2d pos, ImageView& view) override;
     void on_sec(ButtonState state, Vec2d pos, ImageView& view) override;
+    void on_modifier1(ButtonState state, Vec2d pos, ImageView& view) override;
     void on_move(Vec2d pos, ImageView& view) override;
 
     void cancel() override;
@@ -123,6 +124,7 @@ struct StripTool : Tool {
    private:
     Stack<Vec2d> points_;
     Vec2d current_ = Vec2d(0.0, 0.0);
+    bool looped_ = false;
 };
 
 #endif
