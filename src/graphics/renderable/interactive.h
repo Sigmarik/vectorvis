@@ -178,6 +178,8 @@ struct Interactive : public Renderable {
      * @return false otherwise
      */
     bool is_under(const MatrixStack<Mat33d>& stack, const Vec2d& screen_pos) {
+        if (size_.get_x() == 0.0 || size_.get_y() == 0.0) return false;
+
         // clang-format off
         Vec2d tl = get_corner(TOP_LEFT,     stack);
         Vec2d tr = get_corner(TOP_RIGHT,    stack);

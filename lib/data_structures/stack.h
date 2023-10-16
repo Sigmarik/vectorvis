@@ -25,6 +25,8 @@ struct Stack {
     void push(const T& value);
     void pop();
 
+    void clear();
+
     T& top() const;
     T& operator[](size_t index) const;
     size_t size() const;

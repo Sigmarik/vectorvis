@@ -45,7 +45,8 @@ BLD_SUFFIX = _v$(BLD_VERSION)_$(BLD_TYPE)_$(BLD_PLATFORM)$(BLD_FORMAT)
 
 BUILD_ERRLOG_FNAME = latest_build_err.log
 
-SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system
+SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
+	-lpthread -lXrandr -lXi -ldl
 
 LIB_OBJECTS = lib/logger/debug.o			\
 			  lib/logger/logger.o			\
@@ -75,8 +76,9 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/graphics/renderable/plot.o						\
 	src/graphics/renderable/image_view.o				\
 	src/graphics/renderable/visuals/fps_meter.o			\
+	src/graphics/renderable/drawing/tool_selector.o		\
 	src/simulation/simulation.o							\
-	src/editor_tools/tools.o							\
+	src/editor_tools/tool.o								\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "stack.h"
+
 template <class T>
 Stack<T>::Stack()
     : buffer_((T*)calloc(16, sizeof(T))), size_(0), capacity_(16) {}
@@ -71,6 +73,11 @@ void Stack<T>::pop() {
     }
 
     buffer_[size_].~T();
+}
+
+template <class T>
+inline void Stack<T>::clear() {
+    size_ = 0;
 }
 
 template <class T>
