@@ -7,7 +7,7 @@
 static const sf::Color PREVIEW_COLOR = sf::Color(125, 255, 125);
 
 static sf::Color get_fg_color(const ImageView& view) {
-    ToolPallet* pallet = view.get_pallet();
+    ToolPalette* pallet = view.get_pallet();
 
     if (pallet == nullptr) return sf::Color(255, 0, 255);
 
@@ -15,7 +15,7 @@ static sf::Color get_fg_color(const ImageView& view) {
 }
 
 static sf::Color get_bg_color(const ImageView& view) {
-    ToolPallet* pallet = view.get_pallet();
+    ToolPalette* pallet = view.get_pallet();
 
     if (pallet == nullptr) return sf::Color(255, 125, 255);
 
@@ -95,6 +95,7 @@ void LineTool::confirm(ImageView& image_view) {
     draw_thick_line(image_view, start_pos_, end_pos_, thickness_);
 
     active_ = false;
+    image_view.update_image();
 }
 
 static const unsigned PREVIEW_DETAIL = 12;
@@ -174,6 +175,8 @@ void CircleTool::confirm(ImageView& view) {
     }
 
     active_ = false;
+
+    view.update_image();
 }
 
 void PencilTool::render(const MatrixStack<Mat33d>& stack,
@@ -200,6 +203,7 @@ void PencilTool::on_main(ButtonState state, Vec2d pos, ImageView& view) {
         start_pos_ = pos;
     } else {
         cancel();
+        view.update_image();
     }
 }
 
@@ -211,12 +215,14 @@ void PencilTool::on_sec(ButtonState state, Vec2d pos, ImageView& view) {
         start_pos_ = pos;
     } else {
         cancel();
+        view.update_image();
     }
 }
 void PencilTool::on_move(Vec2d pos, ImageView& view) {
     end_pos_ = pos;
     confirm(view);
 }
+
 void PencilTool::confirm(ImageView& view) {
     if (!active_) return;
 
@@ -276,4 +282,91 @@ void StripTool::confirm(ImageView& view) {
                         thickness_);
 
     points_.clear();
+    view.update_image();
+}
+
+static const Vec2d PICKER_PREVIEW_SIZE = Vec2d(0.5, 0.5);
+
+void PickerTool::render(const MatrixStack<Mat33d>& stack,
+                        sf::RenderTarget& target, const ImageView& view) {
+    sf::VertexArray rect(sf::PrimitiveType::Quads, 4);
+
+    Vec2d origin = view.to_scene_coords(pos_) + Vec2d(0.1, 0.1);
+
+    rect[0].position = to_Vector2f(
+        stack.top() * extrude(origin + PICKER_PREVIEW_SIZE * Vec2d(0.0, 0.0)));
+    rect[1].position = to_Vector2f(
+        stack.top() * extrude(origin + PICKER_PREVIEW_SIZE * Vec2d(1.0, 0.0)));
+    rect[2].position = to_Vector2f(
+        stack.top() * extrude(origin + PICKER_PREVIEW_SIZE * Vec2d(1.0, 1.0)));
+    rect[3].position = to_Vector2f(
+        stack.top() * extrude(origin + PICKER_PREVIEW_SIZE * Vec2d(0.0, 1.0)));
+
+    sf::Color color =
+        sf::Color((unsigned char)color_.get_x(), (unsigned char)color_.get_y(),
+                  (unsigned char)color_.get_z());
+    for (unsigned id = 0; id < 4; ++id) rect[id].color = color;
+
+    target.draw(rect);
+}
+
+void PickerTool::on_main(ButtonState state, Vec2d pos, ImageView& view) {
+    pos_ = pos;
+    active_ = state == BTN_DOWN;
+
+    if (state == BTN_DOWN) {
+        density_++;
+        background_ = false;
+    }
+}
+
+void PickerTool::on_sec(ButtonState state, Vec2d pos, ImageView& view) {
+    pos_ = pos;
+    active_ = state == BTN_DOWN;
+
+    if (state == BTN_DOWN) {
+        density_++;
+        background_ = true;
+    }
+}
+
+void PickerTool::on_move(Vec2d pos, ImageView& view) {
+    pos_ = pos;
+
+    const sf::Image& image = view.get_image();
+    sf::Color color_raw = sf::Color::Black;
+    if (pos_.get_x() > 0.0 && pos_.get_x() < image.getSize().x &&
+        pos_.get_y() > 0.0 && pos_.get_y() < image.getSize().y) {
+        color_raw =
+            image.getPixel((unsigned)pos_.get_x(), (unsigned)pos_.get_y());
+    }
+
+    Vec3d current = Vec3d(color_raw.r, color_raw.g, color_raw.b);
+
+    if (density_ == 0) {
+        color_ = current;
+    }
+
+    if (active_) {
+        color_ = current * (1.0 / (density_ + 1)) +
+                 color_ * ((double)density_ / (density_ + 1));
+
+        density_++;
+    }
+}
+
+void PickerTool::cancel() {
+    active_ = false;
+    density_ = 0;
+}
+
+void PickerTool::confirm(ImageView& view) {
+    sf::Color color =
+        sf::Color((unsigned char)color_.get_x(), (unsigned char)color_.get_y(),
+                  (unsigned char)color_.get_z());
+
+    if (background_)
+        view.get_pallet()->set_bg_color(color);
+    else
+        view.get_pallet()->set_fg_color(color);
 }

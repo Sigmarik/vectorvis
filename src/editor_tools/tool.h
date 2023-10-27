@@ -42,9 +42,9 @@ struct Tool {
     unsigned thickness_ = 3;
 };
 
-struct ToolPallet {
-    ToolPallet() = default;
-    ~ToolPallet() = default;
+struct ToolPalette {
+    ToolPalette() = default;
+    ~ToolPalette() = default;
 
     Tool* get_tool() const { return active_tool_; }
     void set_tool(Tool* tool) { active_tool_ = tool; }
@@ -122,9 +122,28 @@ struct StripTool : Tool {
     void confirm(ImageView& view) override;
 
    private:
-    Stack<Vec2d> points_;
+    Stack<Vec2d> points_ = {};
     Vec2d current_ = Vec2d(0.0, 0.0);
     bool looped_ = false;
+};
+
+struct PickerTool : Tool {
+    void render(const MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
+                const ImageView& view) override;
+
+    void on_main(ButtonState state, Vec2d pos, ImageView& view) override;
+    void on_sec(ButtonState state, Vec2d pos, ImageView& view) override;
+    void on_move(Vec2d pos, ImageView& view) override;
+
+    void cancel() override;
+
+    void confirm(ImageView& view) override;
+
+   private:
+    Vec2d pos_ = Vec2d();
+    bool background_ = false;
+    Vec3d color_ = Vec3d(0.0, 0.0, 0.0);
+    unsigned density_ = 0;
 };
 
 #endif

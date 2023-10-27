@@ -16,17 +16,38 @@
 
 #include "interactive.h"
 
-struct ToolPallet;
+struct ToolPalette;
+struct FilterPalette;
+
+struct Mask {
+    Mask(size_t width, size_t height);
+    ~Mask();
+    explicit Mask(const Mask& mask);
+    Mask& operator=(const Mask& mask);
+
+    bool get_at(size_t pos_x, size_t pos_y) const;
+    void set_at(size_t pos_x, size_t pos_y, bool value);
+
+    size_t get_width() const { return width_; }
+    size_t get_height() const { return height_; }
+
+    void fill(bool value);
+    void invert();
+
+   private:
+    bool* data_;
+    size_t width_ = 0, height_ = 0;
+};
 
 /**
  * @brief Interactive image preview
  *
  */
 struct ImageView : Interactive {
-    ImageView(ToolPallet* pallet, Vec2d center, Vec2d size,
-              const char* file_name);
-    ImageView(ToolPallet* pallet, Vec2d center, Vec2d size, unsigned width,
-              unsigned height);
+    ImageView(ToolPalette* tools, FilterPalette* filters, Vec2d center,
+              Vec2d size, const char* file_name);
+    ImageView(ToolPalette* tools, FilterPalette* filters, Vec2d center,
+              Vec2d size, unsigned width, unsigned height);
     ImageView(const ImageView& view) = default;
     ~ImageView() = default;
 
@@ -67,7 +88,11 @@ struct ImageView : Interactive {
     void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
                 const AssetShelf& assets) override;
 
-    ToolPallet* get_pallet() const { return pallet_; }
+    ToolPalette* get_pallet() const { return tools_; }
+
+    void update_image();
+    void update_from_image();
+    sf::Image& get_image() { return image_; }
 
    private:
     void upd_tool(const Vec2d& img_pos, const sf::Event& event);
@@ -76,8 +101,13 @@ struct ImageView : Interactive {
     Vec2d img_rect_center_ = Vec2d(0.5, 0.5);
     double scale_ = 1.0;
     bool is_active_ = false;
+    bool img_update_ = false;
+    sf::Image image_ = sf::Image();
 
-    ToolPallet* pallet_;
+    ToolPalette* tools_;
+    FilterPalette* filters_;
+
+    Mask selection_;
 };
 
 #endif

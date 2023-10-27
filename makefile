@@ -79,6 +79,7 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/graphics/renderable/drawing/tool_selector.o		\
 	src/simulation/simulation.o							\
 	src/editor_tools/tool.o								\
+	src/editor_tools/filter.o							\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))

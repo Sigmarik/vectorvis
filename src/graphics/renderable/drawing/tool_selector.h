@@ -16,7 +16,7 @@
 #include "src/graphics/renderable/interactive.h"
 
 struct ToolSelector : Interactive {
-    ToolSelector(ToolPallet& pallet)
+    ToolSelector(ToolPalette& pallet)
         : Interactive(Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)), pallet_(pallet) {}
 
     void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
@@ -25,7 +25,7 @@ struct ToolSelector : Interactive {
     void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
 
    private:
-    ToolPallet& pallet_;
+    ToolPalette& pallet_;
 };
 
 #endif

@@ -14,6 +14,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window.hpp>
 
+#include "editor_tools/filter.h"
 #include "editor_tools/tool.h"
 #include "graphics/renderable/buttons/image_scrollbar.h"
 #include "graphics/renderable/drawing/tool_selector.h"
@@ -71,13 +72,14 @@ int main(const int argc, char** argv) {
 
     static DragButton image_drag(image_panel);
 
-    static ToolPallet pallet;
+    static ToolPalette tools;
+    static FilterPalette filters;
 
-    static ToolSelector selector(pallet);
+    static ToolSelector selector(tools);
     image_panel.add_interactive_child(selector);
 
-    static ImageView editor(&pallet, Vec2d(0.0, 0.0), Vec2d(12.0, 12.0),
-                            "assets/example.bmp");
+    static ImageView editor(&tools, &filters, Vec2d(0.0, 0.0),
+                            Vec2d(12.0, 12.0), "assets/example.bmp");
     image_panel.add_interactive_child(editor);
 
     static ImageScrollbar horiz_scrollbar(Vec2d(0.0, -(6.0 + SCROLLBAR_WIDTH)),

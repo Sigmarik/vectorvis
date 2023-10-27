@@ -1,6 +1,6 @@
 #include "tool_selector.h"
 
-static void switch_to(ToolPallet& pallet, Tool& tool) {
+static void switch_to(ToolPalette& pallet, Tool& tool) {
     if (pallet.get_tool() != nullptr) pallet.get_tool()->cancel();
     pallet.set_tool(&tool);
 }
@@ -13,6 +13,7 @@ void ToolSelector::on_event(MatrixStack<Mat33d>& stack,
     static LineTool line;
     static PencilTool pencil;
     static StripTool strip;
+    static PickerTool picker;
 
     switch (interaction.event->key.code) {
         case sf::Keyboard::C: {
@@ -21,8 +22,11 @@ void ToolSelector::on_event(MatrixStack<Mat33d>& stack,
         case sf::Keyboard::L: {
             switch_to(pallet_, line);
         } break;
-        case sf::Keyboard::P: {
+        case sf::Keyboard::B: {
             switch_to(pallet_, pencil);
+        } break;
+        case sf::Keyboard::P: {
+            switch_to(pallet_, picker);
         } break;
         case sf::Keyboard::S: {
             switch_to(pallet_, strip);

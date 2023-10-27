@@ -1,5 +1,7 @@
 #include "image_view.h"
 
+#include <string.h>
+
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
@@ -7,11 +9,16 @@
 #include <SFML/OpenGL.hpp>
 
 #include "sf_cheatsheet.hpp"
+#include "src/editor_tools/filter.h"
 #include "src/editor_tools/tool.h"
 
-ImageView::ImageView(ToolPallet* pallet, Vec2d center, Vec2d size,
-                     const char* file_name)
-    : Interactive(center, size), texture_(), pallet_(pallet) {
+ImageView::ImageView(ToolPalette* tools, FilterPalette* filters, Vec2d center,
+                     Vec2d size, const char* file_name)
+    : Interactive(center, size),
+      texture_(),
+      tools_(tools),
+      filters_(filters),
+      selection_(1, 1) {
     static sf::Image image;
     static sf::Texture texture;
     static sf::Sprite sprite;
@@ -20,13 +27,20 @@ ImageView::ImageView(ToolPallet* pallet, Vec2d center, Vec2d size,
     texture_.create(texture.getSize().x, texture.getSize().y);
     texture_.draw(sprite);
     texture_.setSmooth(false);
+    update_image();
+    selection_ = Mask(texture.getSize().x, texture.getSize().y);
 }
 
-ImageView::ImageView(ToolPallet* pallet, Vec2d center, Vec2d size,
-                     unsigned width, unsigned height)
-    : Interactive(center, size), texture_(), pallet_(pallet) {
+ImageView::ImageView(ToolPalette* tools, FilterPalette* filters, Vec2d center,
+                     Vec2d size, unsigned width, unsigned height)
+    : Interactive(center, size),
+      texture_(),
+      tools_(tools),
+      filters_(filters),
+      selection_(width, height) {
     texture_.create(width, height);
     texture_.setSmooth(false);
+    update_image();
 }
 
 static const double PIXEL_SIZE = 0.1;
@@ -147,14 +161,46 @@ void ImageView::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
 
     target.draw(shape, sf::RenderStates(&texture_.getTexture()));
 
-    if (pallet_ != nullptr && pallet_->get_tool() != nullptr)
-        pallet_->get_tool()->render(stack, target, *this);
+    if (tools_ != nullptr && tools_->get_tool() != nullptr)
+        tools_->get_tool()->render(stack, target, *this);
+}
+
+void ImageView::update_image() {
+    texture_.display();
+    image_ = texture_.getTexture().copyToImage();
+}
+
+void ImageView::update_from_image() {
+    static sf::Sprite sprite;
+    static sf::Texture texture;
+    texture.loadFromImage(image_);
+    sprite.setTexture(texture, true);
+    texture_.draw(sprite);
+    texture_.display();
 }
 
 void ImageView::upd_tool(const Vec2d& img_pos, const sf::Event& event) {
-    if (pallet_ == nullptr || pallet_->get_tool() == nullptr) return;
+    if (filters_ != nullptr && event.type == sf::Event::KeyPressed) {
+        bool correct_key = event.key.control &&
+                           event.key.code <= sf::Keyboard::Num9 &&
+                           event.key.code >= sf::Keyboard::Num0;
 
-    Tool& tool = *pallet_->get_tool();
+        unsigned id = (unsigned)(event.key.code - sf::Keyboard::Num0);
+
+        bool correct_id = id < filters_->get_max_filter_count();
+
+        if (correct_key && correct_id) {
+            filters_->set_active_filter(id);
+
+            update_image();
+            filters_->get_active_filter()->apply(*this, selection_);
+            update_from_image();
+        }
+    }
+
+    if (tools_ == nullptr || tools_->get_tool() == nullptr) return;
+
+    Tool& tool = *tools_->get_tool();
 
     switch (event.type) {
         case sf::Event::MouseMoved: {
@@ -210,5 +256,44 @@ void ImageView::upd_tool(const Vec2d& img_pos, const sf::Event& event) {
         } break;
         default:
             break;
+    }
+}
+
+Mask::Mask(size_t width, size_t height)
+    : data_(new bool[width * height]), width_(width), height_(height) {}
+
+Mask::~Mask() {
+    delete data_;
+    width_ = height_ = 0;
+}
+
+Mask::Mask(const Mask& mask)
+    : data_(new bool[mask.width_ * mask.height_]),
+      width_(mask.width_),
+      height_(mask.height_) {
+    memcpy(data_, mask.data_, width_ * height_);
+}
+
+Mask& Mask::operator=(const Mask& mask) {
+    delete data_;
+    data_ = new bool[mask.width_ * mask.height_];
+    width_ = mask.width_;
+    height_ = mask.height_;
+    return *this;
+}
+
+bool Mask::get_at(size_t pos_x, size_t pos_y) const {
+    return data_[pos_x + pos_y * width_];
+}
+
+void Mask::set_at(size_t pos_x, size_t pos_y, bool value) {
+    data_[pos_x + pos_y * width_] = value;
+}
+
+void Mask::fill(bool value) { memset(data_, value, width_ * height_); }
+
+void Mask::invert() {
+    for (size_t id = 0; id < width_ * height_; ++id) {
+        data_[id] = !data_[id];
     }
 }
