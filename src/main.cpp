@@ -19,8 +19,6 @@
 #include "graphics/renderable/buttons/image_scrollbar.h"
 #include "graphics/renderable/drawing/tool_selector.h"
 #include "graphics/renderable/image_view.h"
-#include "graphics/renderable/molecule_view.h"
-#include "graphics/renderable/plot.h"
 #include "graphics/renderable/visuals/fps_meter.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
@@ -49,7 +47,7 @@ int main(const int argc, char** argv) {
     window_settings.antialiasingLevel = 8;
 
     sf::RenderWindow window(sf::VideoMode(1, 1),
-                            "Vectorvis (build from " __DATE__ __TIME__ ")",
+                            "TILT (build from " __DATE__ __TIME__ ")",
                             sf::Style::Default, window_settings);
 
     window.setSize(sf::Vector2u(800, 600));
@@ -114,45 +112,6 @@ int main(const int argc, char** argv) {
 
     static MatrixStack<Mat33d> render_stack(Mat33d(1.0));
 
-    static GasVolume simulation;
-    MoleculeView simulation_view(simulation, Vec2d(0.0, 0.0),
-                                 Vec2d(3.95, 3.95));
-    Panel sim_border(Vec2d(-1.0, 0.0), Vec2d(4.0, 4.0));
-
-    simulation.add_light_molecule(
-        LightMolecule(Vec2d(0.0, 0.0), Vec2d(1.0, M_PI)));
-    simulation.add_light_molecule(
-        LightMolecule(Vec2d(1.0, 0.0), Vec2d(-1.01, M_PI + 0.01)));
-
-    sim_border.add_child(simulation_view);
-
-    Panel simulation_panel(Vec2d(0.0, 0.0), Vec2d(7.0, 5.0));
-
-    simulation_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
-
-    ValveControlButton input_button(simulation, VALVE_IN, Vec2d(2.25, 2.0),
-                                    Vec2d(1.0, 0.5), "Inflate");
-    ValveControlButton output_button(simulation, VALVE_OUT, Vec2d(2.25, 1.25),
-                                     Vec2d(1.0, 0.5), "Deflate");
-
-    Panel temp_panel(Vec2d(2.25, 0.25), Vec2d(2.0, 1.0));
-    Plot temperature_plt(Vec2d(0.0, 0.0), Vec2d(2.0, 0.75), "Temp");
-    temp_panel.add_child(temperature_plt);
-
-    Panel pres_panel(Vec2d(2.25, -1.0), Vec2d(2.0, 1.0));
-    Plot pressure_plt(Vec2d(0.0, 0.0), Vec2d(2.0, 0.75), "Pres");
-    pres_panel.add_child(pressure_plt);
-
-    DragButton menu_move_button(simulation_panel);
-
-    simulation_panel.add_interactive_child(input_button);
-    simulation_panel.add_interactive_child(output_button);
-    simulation_panel.add_interactive_child(sim_border);
-    simulation_panel.add_interactive_child(temp_panel);
-    simulation_panel.add_interactive_child(pres_panel);
-
-    subwindow_panel.add_interactive_child(simulation_panel);
-
     AssetShelf assets;
 
     unsigned long long last_tick_time = WorldTimer::get();
@@ -194,34 +153,7 @@ int main(const int argc, char** argv) {
         root_panel.tick();
 
         render_stack.pop();
-
-        unsigned long long target_phys_time =
-            (unsigned long long)((double)last_tick_time * PHYS_SIM_SPEED);
-        for (unsigned iteration = 0;
-             iteration < MAX_ITER_COUNT && simulation_time < target_phys_time;
-             ++iteration) {
-            simulation.tick(PHYS_TIME_STEP);
-            simulation_time +=
-                (unsigned long long)ceil(PHYS_TIME_STEP * 1000000.0);
-        }
-
-        if (simulation_time < target_phys_time) {
-            simulation_time = target_phys_time;
-        }
-
-        if (WorldTimer::get() - last_plt_update > 100000) {
-            temperature_plt.add(simulation.get_temperature());
-            pressure_plt.add(simulation.get_pressure() / 1000.0);
-            last_plt_update = WorldTimer::get();
-        }
     }
-
-    //! ERROR: For some reason, SFML likes to set errno to 11 (EAGAIN),
-    //!     while working just fine... Lets just assume it's some weird
-    //!     SFML bug and not the reason why the entirety of my hard drive will
-    //!     be gone within a few launches.
-
-    if (errno == 11) errno = 0;
 
     return errno == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

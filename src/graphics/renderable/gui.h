@@ -131,14 +131,28 @@ struct Button : public Interactive {
      *
      * @param interaction
      */
-    virtual void on_push(Interaction interaction);
+    virtual void on_push(Interaction interaction){};
 
     /**
      * @brief Process button release
      *
      * @param interaction
      */
-    virtual void on_release(Interaction interaction);
+    virtual void on_release(Interaction interaction){};
+
+    /**
+     * @brief Process button hover
+     *
+     * @param interaction
+     */
+    virtual void on_hover(Interaction interaction){};
+
+    /**
+     * @brief Process button unhover
+     *
+     * @param interaction
+     */
+    virtual void on_unhover(Interaction interaction){};
 
     /**
      * @brief Set button text

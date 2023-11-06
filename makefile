@@ -50,7 +50,6 @@ SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
 
 LIB_OBJECTS = lib/logger/debug.o			\
 			  lib/logger/logger.o			\
-			  lib/geometry/secure_vector.o	\
 			  lib/geometry/matrix.o			\
 			  lib/hash/murmur.o
 
@@ -63,21 +62,13 @@ MAIN_OBJECTS = $(LIB_OBJECTS)							\
 	src/utils/main_utils.o								\
 	src/utils/common_utils.o							\
 	src/graphics/renderable/renderable.o				\
-	src/graphics/renderable/arrow.o						\
-	src/graphics/renderable/shadetangle.o				\
 	src/graphics/renderable/interactive.o				\
 	src/graphics/renderable/gui.o						\
-	src/graphics/renderable/ray_tracing_plane.o			\
-	src/graphics/renderable/ray_tracing.o				\
-	src/graphics/renderable/buttons/render_control.o	\
 	src/graphics/renderable/buttons/scrollbar.o			\
 	src/graphics/renderable/buttons/image_scrollbar.o	\
-	src/graphics/renderable/molecule_view.o				\
-	src/graphics/renderable/plot.o						\
 	src/graphics/renderable/image_view.o				\
 	src/graphics/renderable/visuals/fps_meter.o			\
 	src/graphics/renderable/drawing/tool_selector.o		\
-	src/simulation/simulation.o							\
 	src/editor_tools/tool.o								\
 	src/editor_tools/filter.o							\
 	src/io/main_io.o

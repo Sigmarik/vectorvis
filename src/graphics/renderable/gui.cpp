@@ -66,11 +66,6 @@ void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
               (double)sf::Mouse::getPosition(*interaction.window).y /
                   interaction.window->getSize().y);
 
-    //* Uncomment for fun!
-    // if (is_under(stack, mouse_pos)) {
-    //     set_design(DSGN_PANEL_DEBUG);
-    // }
-
     stack.push(get_matrix());
     for (size_t child_id = interactive_children_.size() - 1;
          child_id != (size_t)-1; --child_id) {
@@ -243,10 +238,6 @@ void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
         update_timers();
     }
 }
-
-void Button::on_push(Interaction interaction) {}
-
-void Button::on_release(Interaction interaction) {}
 
 bool Button::is_pushed() { return is_pushed_; }
 
