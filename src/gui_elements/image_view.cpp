@@ -8,7 +8,7 @@
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/OpenGL.hpp>
 
-#include "sf_cheatsheet.hpp"
+#include "gui/sf_cheatsheet.hpp"
 #include "src/editor_tools/filter.h"
 #include "src/editor_tools/tool.h"
 

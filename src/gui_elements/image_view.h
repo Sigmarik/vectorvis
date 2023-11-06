@@ -14,7 +14,7 @@
 
 #include <SFML/Graphics/RenderTexture.hpp>
 
-#include "interactive.h"
+#include "gui/interactive.h"
 
 struct ToolPalette;
 struct FilterPalette;

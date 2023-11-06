@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics/Text.hpp>
 
-#include "src/graphics/renderable/sf_cheatsheet.hpp"
+#include "gui/sf_cheatsheet.hpp"
 
 static double smoothstep(double alpha, double beta, double param) {
     if (param < 0.0) return alpha;

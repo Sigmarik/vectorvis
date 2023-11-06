@@ -14,8 +14,6 @@
 
 #include "common_utils.h"
 #include "geometry/matrix.h"
-#include "src/graphics/renderable/gui.h"
-#include "src/graphics/renderable/renderable.h"
 
 /**
  * @brief Print the label of the program
@@ -31,7 +29,5 @@ void print_label();
  * @return Mat33d
  */
 Mat33d get_screen_matrix(unsigned size_x, unsigned size_y);
-
-void construct_gui(Panel& panel);
 
 #endif

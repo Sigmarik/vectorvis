@@ -12,8 +12,8 @@
 #ifndef PALLET_WIDGET_H
 #define PALLET_WIDGET_H
 
+#include "gui/interactive.h"
 #include "src/editor_tools/tool.h"
-#include "src/graphics/renderable/interactive.h"
 
 struct ToolSelector : Interactive {
     ToolSelector(ToolPalette& pallet)

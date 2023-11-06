@@ -12,7 +12,7 @@
 #ifndef SCROLLBAR_H
 #define SCROLLBAR_H
 
-#include "src/graphics/renderable/gui.h"
+#include "gui.h"
 
 static const double SCROLLBAR_WIDTH = 0.25;
 

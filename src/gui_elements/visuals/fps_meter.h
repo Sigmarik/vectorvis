@@ -12,7 +12,7 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
-#include "src/graphics/renderable/interactive.h"
+#include "gui/interactive.h"
 
 struct FpsMeter : public Interactive {
     FpsMeter(Vec2d center, double scale);

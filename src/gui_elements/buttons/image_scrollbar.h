@@ -12,8 +12,8 @@
 #ifndef IMAGE_SCROLLBAR_H
 #define IAMGE_SCROLLBAR_H
 
-#include "scrollbar.h"
-#include "src/graphics/renderable/image_view.h"
+#include "gui/scrollbar.h"
+#include "src/gui_elements/image_view.h"
 
 struct ImageScrollbar : Scrollbar {
     ImageScrollbar(Vec2d center, double length, ImageView& view,

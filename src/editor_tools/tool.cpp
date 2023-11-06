@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "src/graphics/renderable/sf_cheatsheet.hpp"
+#include "gui/sf_cheatsheet.hpp"
 
 static const sf::Color PREVIEW_COLOR = sf::Color(125, 255, 125);
 

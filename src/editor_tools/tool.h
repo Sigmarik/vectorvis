@@ -12,7 +12,7 @@
 #ifndef TOOL_H
 #define TOOL_H
 
-#include "src/graphics/renderable/image_view.h"
+#include "src/gui_elements/image_view.h"
 
 enum ButtonState {
     BTN_DOWN,

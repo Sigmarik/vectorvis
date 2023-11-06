@@ -48,9 +48,13 @@ BUILD_ERRLOG_FNAME = latest_build_err.log
 SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
 	-lpthread -lXrandr -lXi -ldl
 
-LIB_OBJECTS = lib/logger/debug.o			\
-			  lib/logger/logger.o			\
-			  lib/geometry/matrix.o			\
+LIB_OBJECTS = lib/logger/debug.o	\
+			  lib/logger/logger.o	\
+			  lib/geometry/matrix.o	\
+			  lib/gui/renderable.o	\
+			  lib/gui/interactive.o	\
+			  lib/gui/gui.o			\
+			  lib/gui/scrollbar.o	\
 			  lib/hash/murmur.o
 
 MAIN_NAME = main
@@ -58,19 +62,15 @@ MAIN_BLD_FULL_NAME = $(MAIN_NAME)$(BLD_SUFFIX)
 
 MAIN_MAIN = src/main.cpp
 
-MAIN_OBJECTS = $(LIB_OBJECTS)							\
-	src/utils/main_utils.o								\
-	src/utils/common_utils.o							\
-	src/graphics/renderable/renderable.o				\
-	src/graphics/renderable/interactive.o				\
-	src/graphics/renderable/gui.o						\
-	src/graphics/renderable/buttons/scrollbar.o			\
-	src/graphics/renderable/buttons/image_scrollbar.o	\
-	src/graphics/renderable/image_view.o				\
-	src/graphics/renderable/visuals/fps_meter.o			\
-	src/graphics/renderable/drawing/tool_selector.o		\
-	src/editor_tools/tool.o								\
-	src/editor_tools/filter.o							\
+MAIN_OBJECTS = $(LIB_OBJECTS)					\
+	src/utils/main_utils.o						\
+	src/utils/common_utils.o					\
+	src/gui_elements/buttons/image_scrollbar.o	\
+	src/gui_elements/image_view.o				\
+	src/gui_elements/visuals/fps_meter.o		\
+	src/gui_elements/drawing/tool_selector.o	\
+	src/editor_tools/tool.o						\
+	src/editor_tools/filter.o					\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
