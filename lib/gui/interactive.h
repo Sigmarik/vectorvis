@@ -87,7 +87,8 @@ enum Corner {
  * @brief Rectangular object that is able to process user events
  *
  */
-struct Interactive : public Renderable {
+struct [[deprecated("Replaced by Widget class")]] Interactive
+    : public Renderable {
     Interactive(const Vec2d& center, const Vec2d& size);
     virtual ~Interactive() = default;
 
@@ -97,7 +98,7 @@ struct Interactive : public Renderable {
      * @param stack
      * @param interaction
      */
-    virtual void on_event(MatrixStack<Mat33d>& stack, Interaction interaction);
+    virtual void on_event(MatrixStack<Mat33d> & stack, Interaction interaction);
 
     /**
      * @brief Get object center point

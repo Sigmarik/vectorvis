@@ -8,7 +8,8 @@ Stack<T>::Stack()
     : buffer_((T*)calloc(16, sizeof(T))), size_(0), capacity_(16) {}
 
 template <class T>
-Stack<T>::Stack(const Stack<T>& stack) {
+Stack<T>::Stack(const Stack<T>& stack)
+    : buffer_(nullptr), size_(stack.size_), capacity_(stack.capacity_) {
     size_ = stack.size_;
     capacity_ = stack.capacity_;
     buffer_ = (T*)calloc(capacity_, sizeof(T));

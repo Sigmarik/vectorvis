@@ -53,6 +53,8 @@ struct AssetShelf final {
     DesignDescriptor designs[DESIGN_COUNT];
 };
 
+typedef MatrixStack<Mat33d> TransformStack;
+
 /**
  * @brief Visible object
  *

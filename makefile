@@ -55,6 +55,8 @@ LIB_OBJECTS = lib/logger/debug.o	\
 			  lib/gui/interactive.o	\
 			  lib/gui/gui.o			\
 			  lib/gui/scrollbar.o	\
+			  lib/gui/widget.o		\
+			  lib/gui/layout_box.o	\
 			  lib/hash/murmur.o
 
 MAIN_NAME = main
