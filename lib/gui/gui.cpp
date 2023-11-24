@@ -1,303 +1,252 @@
 #include "gui.h"
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <GL/glew.h>
 
-#include <SFML/Graphics/ConvexShape.hpp>
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Window/Mouse.hpp>
+#include <SFML/Graphics/Glsl.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/Graphics/VertexBuffer.hpp>
+#include <SFML/OpenGL.hpp>
 
-#include "sf_cheatsheet.hpp"
+#include "Impl/Graphics/RenderTarget.h"
+#include "anchor.h"
+#include "environment.h"
+#include "world_timer.h"
 
-Panel::Panel(const Vec2d& center, const Vec2d& size)
-    : Interactive(center, size), children_(), interactive_children_() {}
+static sf::Vector2f to_vector2f(const Vec2d& vector) {
+    return sf::Vector2f((float)vector.x, (float)vector.y);
+}
 
-void Panel::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
-                   const AssetShelf& assets) {
-    static sf::VertexArray shape(sf::PrimitiveType::Quads, 4);
+void Panel::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
+    static plug::VertexArray vertices(plug::PrimitiveType::Quads, 9 * 4);
+
+    DesignDescriptor design = AssetShelf::getDesign(design_);
+
+    constructMesh(vertices, stack);
+
+    target.draw(vertices, AssetShelf::getDesign(design_).image);
+
+    stack.enter(getLocalCoords());
+
+    for (size_t id = 0; id < children_.size(); ++id) {
+        children_[id]->draw(stack, target);
+    }
+
+    stack.leave();
+}
+
+void Panel::onEvent(const plug::Event& event, plug::EHC& context) {
+    context.stack.enter(getLocalCoords());
+
+    for (size_t id = children_.size(); id != 0; --id) {
+        children_[id - 1]->onEvent(event, context);
+        if (context.stopped) break;
+    }
+
+    context.stack.leave();
+
+    Widget::onEvent(event, context);
+}
+
+void Panel::onMouseMove(const plug::MouseMoveEvent& event, plug::EHC& context) {
+    if (follows_mouse_) {
+        Vec2d delta = context.stack.top().restore(event.pos) -
+                      context.stack.top().restore(old_mouse_pos_);
+
+        getLayoutBox().setPosition(getLayoutBox().getPosition() + delta);
+    }
+    old_mouse_pos_ = event.pos;
+
+    Widget::onMouseMove(event, context);
+}
+
+void Panel::addChild(plug::Widget& widget) { children_.push(&widget); }
+
+void Panel::onParentUpdate(const plug::LayoutBox& parent_box) {
+    Widget::onParentUpdate(parent_box);
+
+    for (size_t id = 0; id < children_.size(); ++id) {
+        children_[id]->onParentUpdate(parent_box);
+    }
+}
+
+static const double DPU = 50.0;
+
+void Panel::constructMesh(plug::VertexArray& array,
+                          const plug::TransformStack& stack) {
+    plug::Vertex verts[4][4];
+
+    DesignDescriptor design = AssetShelf::getDesign(design_);
+
+    double abs_margin = design.margin;
+
+    double shift = 1.5 * abs_margin / DPU;
+
+    Vec2d uv_margin = Vec2d((double)abs_margin, (double)abs_margin) /
+                      Vec2d(design.image.width, design.image.height);
 
     // clang-format off
-    shape[0].position = to_Vector2f(get_corner(TOP_LEFT,     stack));
-    shape[1].position = to_Vector2f(get_corner(TOP_RIGHT,    stack));
-    shape[2].position = to_Vector2f(get_corner(BOTTOM_RIGHT, stack));
-    shape[3].position = to_Vector2f(get_corner(BOTTOM_LEFT,  stack));
+    verts[0][3].position = getAbsCorner(Corner::TopLeft);
+    verts[3][3].position = getAbsCorner(Corner::TopRight);
+    verts[3][0].position = getAbsCorner(Corner::BottomRight);
+    verts[0][0].position = getAbsCorner(Corner::BottomLeft);
+
+    verts[0][3].tex_coords = Vec2d(0.0, 1.0);
+    verts[3][3].tex_coords = Vec2d(1.0, 1.0);
+    verts[3][0].tex_coords = Vec2d(1.0, 0.0);
+    verts[0][0].tex_coords = Vec2d(0.0, 0.0);
+
+    verts[0][1].position = verts[0][0].position + Vec2d(0.0, shift);
+    verts[1][0].position = verts[0][0].position + Vec2d(shift, 0.0);
+    verts[1][1].position = verts[0][0].position + Vec2d(shift, shift);
+    verts[0][1].tex_coords = verts[0][0].tex_coords + Vec2d(0.0, uv_margin.y);
+    verts[1][0].tex_coords = verts[0][0].tex_coords + Vec2d(uv_margin.x, 0.0);
+    verts[1][1].tex_coords = verts[0][0].tex_coords + Vec2d(uv_margin.x, uv_margin.y);
+
+    verts[0][2].position = verts[0][3].position + Vec2d(0.0, -shift);
+    verts[1][3].position = verts[0][3].position + Vec2d(shift, 0.0);
+    verts[1][2].position = verts[0][3].position + Vec2d(shift, -shift);
+    verts[0][2].tex_coords = verts[0][3].tex_coords + Vec2d(0.0, -uv_margin.y);
+    verts[1][3].tex_coords = verts[0][3].tex_coords + Vec2d(uv_margin.x, 0.0);
+    verts[1][2].tex_coords = verts[0][3].tex_coords + Vec2d(uv_margin.x, -uv_margin.y);
+
+    verts[3][2].position = verts[3][3].position + Vec2d(0.0, -shift);
+    verts[2][3].position = verts[3][3].position + Vec2d(-shift, 0.0);
+    verts[2][2].position = verts[3][3].position + Vec2d(-shift, -shift);
+    verts[3][2].tex_coords = verts[3][3].tex_coords + Vec2d(0.0, -uv_margin.y);
+    verts[2][3].tex_coords = verts[3][3].tex_coords + Vec2d(-uv_margin.x, 0.0);
+    verts[2][2].tex_coords = verts[3][3].tex_coords + Vec2d(-uv_margin.x, -uv_margin.y);
+
+    verts[3][1].position = verts[3][0].position + Vec2d(0.0, shift);
+    verts[2][0].position = verts[3][0].position + Vec2d(-shift, 0.0);
+    verts[2][1].position = verts[3][0].position + Vec2d(-shift, shift);
+    verts[3][1].tex_coords = verts[3][0].tex_coords + Vec2d(0.0, uv_margin.y);
+    verts[2][0].tex_coords = verts[3][0].tex_coords + Vec2d(-uv_margin.x, 0.0);
+    verts[2][1].tex_coords = verts[3][0].tex_coords + Vec2d(-uv_margin.x, uv_margin.y);
     // clang-format on
 
-    shape[0].texCoords = sf::Vector2f(0.0, 0.0);
-    shape[1].texCoords = sf::Vector2f(1.0, 0.0);
-    shape[2].texCoords = sf::Vector2f(1.0, 1.0);
-    shape[3].texCoords = sf::Vector2f(0.0, 1.0);
-
-    fill_shader_parameters(stack, target, assets);
-
-    target.draw(shape, &assets.designs[design_].shader);
-
-    stack.push(get_matrix());
-    for (size_t child_id = 0; child_id < children_.size(); ++child_id) {
-        children_[child_id]->render(stack, target, assets);
-    }
-    for (size_t child_id = 0; child_id < interactive_children_.size();
-         ++child_id) {
-        interactive_children_[child_id]->apply_anchor(vis_size_);
-        interactive_children_[child_id]->render(stack, target, assets);
-    }
-    stack.pop();
-}
-
-void Panel::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
-    Interactive::on_event(stack, interaction);
-    if (movable_ && interaction.event->type == sf::Event::MouseMoved) {
-        double cursor_x = (double)sf::Mouse::getPosition().x;
-        double cursor_y = (double)sf::Mouse::getPosition().y;
-        double dx = (cursor_x - last_cursor_position_.get_x()) /
-                    interaction.window->getSize().x;
-        double dy = (cursor_y - last_cursor_position_.get_y()) /
-                    interaction.window->getSize().y;
-
-        last_cursor_position_.set_x(cursor_x);
-        last_cursor_position_.set_y(cursor_y);
-
-        Vec3d shift = stack.top().inverse() * Vec3d(dx, dy, 0);
-        set_center(get_center() + Vec2d(shift.get_x(), shift.get_y()));
+    for (unsigned id_x = 0; id_x < 4; ++id_x) {
+        for (unsigned id_y = 0; id_y < 4; ++id_y) {
+            verts[id_x][id_y].position =
+                stack.apply(verts[id_x][id_y].position);
+        }
     }
 
-    Vec2d mouse_pos =
-        Vec2d((double)sf::Mouse::getPosition(*interaction.window).x /
-                  interaction.window->getSize().x,
-              (double)sf::Mouse::getPosition(*interaction.window).y /
-                  interaction.window->getSize().y);
+    unsigned id = 0;
 
-    stack.push(get_matrix());
-    for (size_t child_id = interactive_children_.size() - 1;
-         child_id != (size_t)-1; --child_id) {
-        Interactive& child = *interactive_children_[child_id];
-
-        child.apply_anchor(vis_size_);
-
-        bool overlap = child.is_under(stack, mouse_pos);
-
-        child.on_event(stack, interaction);
-
-        if (orderable_ && !interaction.obstructed && overlap &&
-            interaction.event->type == sf::Event::MouseButtonPressed)
-            focus_child(child);
-
-        interaction.obstructed = interaction.obstructed || overlap;
-    }
-    stack.pop();
-}
-
-void Panel::tick() {
-    for (size_t child_id = 0; child_id < interactive_children_.size();
-         ++child_id) {
-        interactive_children_[child_id]->tick();
-    }
-}
-
-void Panel::add_child(Renderable& child) { children_.push(&child); }
-
-void Panel::add_interactive_child(Interactive& child, Anchor anchor) {
-    child.set_anchor(anchor);
-    interactive_children_.push(&child);
-}
-
-void Panel::focus_child(const Interactive& child) {
-    for (size_t id = 0; id + 1 < interactive_children_.size(); ++id) {
-        if (interactive_children_[id] == &child) {
-            Interactive* mem = interactive_children_[id];
-            interactive_children_[id] = interactive_children_[id + 1];
-            interactive_children_[id + 1] = mem;
+    for (unsigned quad_x = 0; quad_x < 3; ++quad_x) {
+        for (unsigned quad_y = 0; quad_y < 3; ++quad_y) {
+            array[id++] = verts[quad_x][quad_y];
+            array[id++] = verts[quad_x + 1][quad_y];
+            array[id++] = verts[quad_x + 1][quad_y + 1];
+            array[id++] = verts[quad_x][quad_y + 1];
         }
     }
 }
 
-bool Panel::is_movable() const { return movable_; }
+static plug::Transform inverse(const plug::Transform& transform) {
+    Vec2d inverse_scale =
+        Vec2d(1.0 / transform.getScale().x, 1.0 / transform.getScale().y);
+    Vec2d inverse_offset = transform.getOffset() * -1.0 / transform.getScale();
 
-void Panel::set_movable(bool movable) {
-    movable_ = movable;
-    last_cursor_position_.set_x((double)sf::Mouse::getPosition().x);
-    last_cursor_position_.set_y((double)sf::Mouse::getPosition().y);
+    return plug::Transform(inverse_offset, inverse_scale);
 }
 
-void Panel::fill_shader_parameters(MatrixStack<Mat33d>& stack,
-                                   sf::RenderTarget& target,
-                                   const AssetShelf& assets) {
-    //! WARNING: Intentional const qualifier violation!
-    AssetShelf& shelf = *(AssetShelf*)(&assets);
-    sf::Shader& shader = shelf.designs[design_].shader;
-
-    set_matrix_uniform(shader, "transform", stack.top());
-
-    shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
-    shader.setParameter("center", to_Vector2f(vis_center_));
-
-    Vec3d center = extrude(vis_center_);
-    Vec3d size = extrude(vis_size_);
-
-    Vec3d window_size = Vec3d(target.getSize().x, target.getSize().y, 1.0);
-
-    Vec3d tl =
-        stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)) * window_size;
-    Vec3d tr =
-        stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)) * window_size;
-    Vec3d br =
-        stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)) * window_size;
-
-    shader.setParameter("center_px",
-                        to_Vector2f((stack.top() * center) * window_size));
-    shader.setParameter("size", to_Vector2f(vis_size_));
-
-    shader.setParameter("size_px", sf::Vector2f((float)(tl - tr).length(),
-                                                (float)(tr - br).length()));
-    shader.setParameter("mouse", to_Vector2f(mouse_position_));
-    shader.setParameter("window_size", to_Vector2f(window_size));
-}
-
-Button::Button(const Vec2d& center, const Vec2d& size, const char* text)
-    : Interactive(center, size), text_(text) {}
-
-void Button::render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
-                    const AssetShelf& assets) {
-    static sf::VertexArray shape(sf::PrimitiveType::Quads, 4);
-    static sf::Text render_text("[DEBUG TEXT]", sf::Font(), 13);
-
-    double text_scale_x = (stack.top() * Vec3d(1.0, 0.0, 0.0)).length() / 50.0;
-    double text_scale_y = (stack.top() * Vec3d(0.0, 1.0, 0.0)).length() / 50.0;
-
-    render_text.setScale(
-        sf::Vector2f((float)text_scale_x, (float)text_scale_y));
-
-    render_text.setFont(assets.font);
-
-    Vec3d center = extrude(vis_center_);
-    Vec3d size = extrude(vis_size_);
-
+static sf::Glsl::Mat3 get_matrix(const plug::Transform& transform) {
     // clang-format off
-    shape[0].position = to_Vector2f(get_corner(TOP_LEFT,     stack));
-    shape[1].position = to_Vector2f(get_corner(TOP_RIGHT,    stack));
-    shape[2].position = to_Vector2f(get_corner(BOTTOM_RIGHT, stack));
-    shape[3].position = to_Vector2f(get_corner(BOTTOM_LEFT,  stack));
+    sf::Glsl::Mat3 sf_matrix({(float)transform.getScale().x, 0.0f,
+                              (float)transform.getOffset().x,
+                              0.0f, (float)transform.getScale().y,
+                              (float)transform.getOffset().y,
+                              0.0f, 0.0f, 1.0f});
     // clang-format on
 
-    shape[0].texCoords = sf::Vector2f(0.0, 0.0);
-    shape[1].texCoords = sf::Vector2f(1.0, 0.0);
-    shape[2].texCoords = sf::Vector2f(1.0, 1.0);
-    shape[3].texCoords = sf::Vector2f(0.0, 1.0);
-
-    fill_shader_parameters(stack, target, assets);
-
-    target.draw(shape, &assets.designs[design_].shader);
-
-    render_text.setString(text_);
-    render_text.setPosition(to_Vector2f(stack.top() * center));
-    render_text.setOrigin(
-        sf::Vector2f(render_text.getLocalBounds().width / 2.0f,
-                     render_text.getLocalBounds().height / 2.0f));
-
-    target.draw(render_text);
+    return sf_matrix;
 }
 
-static const double AMPL_DEFAULT = 1.0;
-static const double AMPL_HOVER = 0.9;
-static const double AMPL_PUSHED = 0.8;
+void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
+    // TODO: Implement
 
-void Button::on_event(MatrixStack<Mat33d>& stack, Interaction interaction) {
-    Interactive::on_event(stack, interaction);
-    Vec2d mouse_pos((double)sf::Mouse::getPosition(*interaction.window).x /
-                        interaction.window->getSize().x,
-                    (double)sf::Mouse::getPosition(*interaction.window).y /
-                        interaction.window->getSize().y);
+    Widget::draw(stack, target);
+}
 
-    //* Uncomment for fun!
-    // if (is_under(stack, mouse_pos) && !interaction.obstructed) {
-    //     set_design(DSGN_PANEL_DEBUG);
-    // }
+void Button::onTick(const plug::TickEvent& event, plug::EHC& context) {
+    unsigned long long delta_time =
+        (unsigned long long)(event.delta_time * 1000000.0);
 
-    bool has_mouse_over = is_under(stack, mouse_pos) && !interaction.obstructed;
-
-    if (is_hovered_ != has_mouse_over) {
-        is_hovered_ = has_mouse_over;
-        hover_timer_ = 0;
-        update_timers();
+    if (is_pushed_) {
+        push_timer_ += delta_time;
+    } else {
+        push_timer_ -= delta_time;
     }
 
-    if (interaction.event->mouseButton.button != sf::Mouse::Left) return;
+    if (is_hovered_) {
+        hover_timer_ += delta_time;
+    } else {
+        hover_timer_ -= delta_time;
+    }
+}
 
-    if (interaction.event->type == sf::Event::MouseButtonReleased &&
-        is_pushed_) {
-        is_pushed_ = false;
-        on_release(interaction);
-        push_timer_ = 0;
-        update_timers();
+void Button::onMouseMove(const plug::MouseMoveEvent& event,
+                         plug::EHC& context) {
+    bool hover = !context.overlapped && covers(context.stack, event.pos);
+
+    if (hover && !is_hovered_) {
+        is_hovered_ = true;
+        hover_timer_ = 0.0;
+
+        onHover();
     }
 
-    if (interaction.event->type == sf::Event::MouseButtonPressed &&
-        has_mouse_over && !is_pushed_) {
+    if (!hover && is_hovered_) {
+        is_hovered_ = false;
+        hover_timer_ = 0.0;
+
+        onUnhover();
+    }
+
+    Widget::onMouseMove(event, context);
+}
+
+void Button::onMousePressed(const plug::MousePressedEvent& event,
+                            plug::EHC& context) {
+    bool cover = !context.overlapped && covers(context.stack, event.pos);
+
+    if (cover && !is_pushed_) {
         is_pushed_ = true;
-        on_push(interaction);
-        push_timer_ = 0;
-        update_timers();
+        push_timer_ = 0.0;
+
+        onPush();
     }
+
+    Widget::onMousePressed(event, context);
 }
 
-bool Button::is_pushed() { return is_pushed_; }
+void Button::onMouseReleased(const plug::MouseReleasedEvent& event,
+                             plug::EHC& context) {
+    if (is_pushed_) {
+        is_pushed_ = false;
+        push_timer_ = 0.0;
 
-void Button::update_timers() {
-    hover_timer_ += WorldTimer::get() - last_upd_time_;
-    push_timer_ += WorldTimer::get() - last_upd_time_;
-    last_upd_time_ = WorldTimer::get();
+        onRelease();
+    }
+
+    Widget::onMouseReleased(event, context);
 }
 
-void Button::fill_shader_parameters(MatrixStack<Mat33d>& stack,
-                                    sf::RenderTarget& target,
-                                    const AssetShelf& assets) {
-    //! WARNING: Intentional const qualifier violation!
-    AssetShelf& shelf = *(AssetShelf*)(&assets);
-    sf::Shader& shader = shelf.designs[design_].shader;
-
-    set_matrix_uniform(shader, "transform", stack.top());
-
-    shader.setParameter("time", (float)WorldTimer::get() / 1000000.0f);
-
-    update_timers();
-
-    shader.setParameter("hover_time", ((float)hover_timer_ / 1000000.0f *
-                                       (is_hovered_ ? 1.0f : -1.0f)));
-    shader.setParameter("push_time", ((float)push_timer_ / 1000000.0f *
-                                      (is_pushed_ ? 1.0f : -1.0f)));
-
-    shader.setParameter("center", to_Vector2f(vis_center_));
-
-    Vec3d center = extrude(vis_center_);
-    Vec3d size = extrude(vis_size_);
-
-    Vec3d window_size = Vec3d(target.getSize().x, target.getSize().y, 1.0);
-
-    Vec3d tl =
-        stack.top() * (center + size * Vec3d(-0.5, 0.5, 0.0)) * window_size;
-    Vec3d tr =
-        stack.top() * (center + size * Vec3d(0.5, 0.5, 0.0)) * window_size;
-    Vec3d br =
-        stack.top() * (center + size * Vec3d(0.5, -0.5, 0.0)) * window_size;
-
-    shader.setParameter("center_px",
-                        to_Vector2f((stack.top() * center) * window_size));
-    shader.setParameter("size", to_Vector2f(vis_size_));
-
-    shader.setParameter("size_px", sf::Vector2f((float)(tl - tr).length(),
-                                                (float)(tr - br).length()));
-    shader.setParameter("mouse", to_Vector2f(mouse_position_));
-    shader.setParameter("window_size", to_Vector2f(window_size));
+plug::Transform Panel::getLocalCoords() const {
+    return plug::Transform(getLayoutBox().getPosition());
 }
 
-DragButton::DragButton(Panel& panel)
-    : Button(Vec2d(0.0, -0.1), Vec2d(1.0, 0.2), ""), panel_(panel) {
-    set_design(DSGN_BUTTON_DRAG);
-    panel.add_interactive_child(*this,
-                                Anchor(Vec2d(0.0, 0.5), Vec2d(1.0, 0.0)));
+static const Anchor DRAG_BTN_ANCHOR(Vec2d(0.0, 0.0),
+                                    ANCHOR_DEFINITION_SIZE* Vec2d(1.0, 0.0) +
+                                        Vec2d(0.0, 0.2),
+                                    ANCHOR_DEFINITION_SIZE* Vec2d(-0.5, 0.5),
+                                    ANCHOR_DEFINITION_SIZE* Vec2d(0.5, 0.5));
+
+DragButton::DragButton(Panel& panel) : Button(DRAG_BTN_ANCHOR), panel_(panel) {
+    panel_.addChild(*this);
 }
 
-void DragButton::on_push(Interaction interaction) { panel_.set_movable(true); }
+void DragButton::onPush() { panel_.setFollowsMouse(true); }
 
-void DragButton::on_release(Interaction interaction) {
-    panel_.set_movable(false);
-}
+void DragButton::onRelease() { panel_.setFollowsMouse(false); }

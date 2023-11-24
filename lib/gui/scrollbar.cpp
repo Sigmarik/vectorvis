@@ -4,7 +4,7 @@ ScrollbarHandle::ScrollbarHandle(ScrollbarBar& bar)
     : Button(Vec2d(0.0, 0.0), Vec2d(SCROLLBAR_WIDTH, SCROLLBAR_HANDLE_HEIGHT),
              ""),
       bar_(bar) {
-    bar_.add_interactive_child(*this, Anchor(Vec2d(0.0, 0.0), Vec2d(0.0, 1.0)));
+    bar_.add_child(*this);
 }
 
 void ScrollbarHandle::on_event(MatrixStack<Mat33d>& stack,

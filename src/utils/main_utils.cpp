@@ -12,10 +12,7 @@ void print_label() {
                __DATE__, __TIME__);
 }
 
-Mat33d get_screen_matrix(unsigned size_x, unsigned size_y) {
-    // clang-format off
-    return Mat33d(50.0 / size_x, 0.0, 0.5,
-                  0.0, -50.0 / size_y, 0.5,
-                  0.0, 0.0, 1.0);
-    // clang-format on
+plug::Transform get_screen_transform(unsigned size_x, unsigned size_y) {
+    return plug::Transform(Vec2d(0.5, 0.5),
+                           Vec2d(50.0 / size_x, 50.0 / size_y));
 }

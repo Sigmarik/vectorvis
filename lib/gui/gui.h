@@ -12,198 +12,98 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include "interactive.h"
+#include "Impl/Widget.h"
+#include "Plug/Math.h"
+#include "data_structures/stack.h"
+#include "graphics/AssetShelf.h"
 
-/**
- * @brief Window-like container widget
- *
- */
-struct Panel : public Interactive {
-    explicit Panel(const Vec2d& center, const Vec2d& size);
+struct Panel : public Widget {
+    using Widget::Widget;
 
-    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
-                const AssetShelf& assets) override;
+    ~Panel() = default;
 
-    void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
+    void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
 
-    void tick() override;
+    void onEvent(const plug::Event& event, plug::EHC& context) override;
 
-    /**
-     * @brief Add visual only child to the panel
-     *
-     * @param child
-     */
-    void add_child(Renderable& child);
+    void onMouseMove(const plug::MouseMoveEvent& event,
+                     plug::EHC& context) override;
 
-    /**
-     * @brief Add interactive child to the panel
-     *
-     * @param child
-     * @param anchor
-     */
-    void add_interactive_child(Interactive& child, Anchor anchor = Anchor());
+    void addChild(plug::Widget& widget);
 
-    /**
-     * @brief Reorder panel's children to render the given child on top
-     *
-     * @param child
-     */
-    void focus_child(const Interactive& child);
+    void onParentUpdate(const plug::LayoutBox& parent_box) override;
 
-    /**
-     * @brief Get if the panel copies mouse movements
-     *
-     * @return true
-     * @return false
-     */
-    bool is_movable() const;
+    bool doesFollowMouse() const { return follows_mouse_; }
+    void setFollowsMouse(bool follows) {
+        follows_mouse_ = follows;
+        is_mp_valid_ = false;
+    }
 
-    /**
-     * @brief Set if the panel should copy mouse movements
-     *
-     * @param movable
-     */
-    void set_movable(bool movable);
-
-    /**
-     * @brief Get if the panel can reorder its children
-     *
-     * @return true
-     * @return false
-     */
-    bool is_orderable() const { return orderable_; }
-
-    /**
-     * @brief Set if the object's children should be focusable by clicking
-     *
-     * @param orderable
-     */
-    void set_orderable(bool orderable) { orderable_ = orderable; }
-
-    /**
-     * @brief Set panel design id
-     *
-     * @param id
-     */
-    void set_design(DesignId id) { design_ = id; }
-
-    /**
-     * @brief Get currently set panel design id
-     *
-     * @return DesignId
-     */
-    DesignId get_design() const { return design_; }
+    DesignId getDesign() const { return design_; }
+    void setDesign(DesignId design) { design_ = design; }
 
    private:
-    void fill_shader_parameters(MatrixStack<Mat33d>& stack,
-                                sf::RenderTarget& target,
-                                const AssetShelf& assets);
+    plug::Transform getLocalCoords() const;
 
-    Stack<Renderable*> children_;
-    Stack<Interactive*> interactive_children_;
+    void constructMesh(plug::VertexArray& array,
+                       const plug::TransformStack& stack);
 
-    Vec2d last_cursor_position_ = Vec2d();
+    Stack<plug::Widget*> children_ = Stack<plug::Widget*>();
+
+    bool follows_mouse_ = false;
+
+    Vec2d known_mouse_pos_ = Vec2d(0.0, 0.0);
     DesignId design_ = DSGN_PANEL_DEFAULT;
-    bool movable_ = false;
-    bool orderable_ = false;
+
+    Vec2d old_mouse_pos_ = Vec2d(0.0, 0.0);
+    bool is_mp_valid_ = false;
 };
 
-static const Vec3d DEFAULT_BUTTON_COLOR(0.24, 0.25, 0.33);
-
-/**
- * @brief Clickable widget
- *
- */
-struct Button : public Interactive {
-    Button(const Vec2d& center, const Vec2d& size, const char* text = "Button");
+struct Button : public Widget {
+    using Widget::Widget;
     Button(const Button& button) = default;
-    virtual ~Button() = default;
+    ~Button() = default;
 
     Button& operator=(const Button& button) = default;
 
-    void render(MatrixStack<Mat33d>& stack, sf::RenderTarget& target,
-                const AssetShelf& assets) override;
+    void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
 
-    void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
+    virtual void onPush(){};
+    virtual void onRelease(){};
+    virtual void onHover(){};
+    virtual void onUnhover(){};
 
-    /**
-     * @brief Process button push
-     *
-     * @param interaction
-     */
-    virtual void on_push(Interaction interaction){};
+    void onTick(const plug::TickEvent& event, plug::EHC& context) override;
 
-    /**
-     * @brief Process button release
-     *
-     * @param interaction
-     */
-    virtual void on_release(Interaction interaction){};
+    void onMouseMove(const plug::MouseMoveEvent& event,
+                     plug::EHC& context) override;
 
-    /**
-     * @brief Process button hover
-     *
-     * @param interaction
-     */
-    virtual void on_hover(Interaction interaction){};
+    void onMousePressed(const plug::MousePressedEvent& event,
+                        plug::EHC& context) override;
 
-    /**
-     * @brief Process button unhover
-     *
-     * @param interaction
-     */
-    virtual void on_unhover(Interaction interaction){};
+    void onMouseReleased(const plug::MouseReleasedEvent& event,
+                         plug::EHC& context) override;
 
-    /**
-     * @brief Set button text
-     *
-     * @param text
-     */
-    void set_text(const char* text) { text_ = text; }
-
-    /**
-     * @brief Get button push state
-     *
-     * @return true if button in currently held
-     * @return false otherwise
-     */
-    bool is_pushed();
-
-    /**
-     * @brief Set button design id
-     *
-     * @param id
-     */
-    void set_design(DesignId id) { design_ = id; }
-
-    /**
-     * @brief Get currently used button design id
-     *
-     * @return DesignId
-     */
-    DesignId get_design() { return design_; }
+    DesignId getDesign() const { return design_; }
+    void setDesign(DesignId id) { design_ = id; }
 
    private:
-    void update_timers();
-    void fill_shader_parameters(MatrixStack<Mat33d>& stack,
-                                sf::RenderTarget& target,
-                                const AssetShelf& assets);
-
-    const char* text_;
+    const char* text_ = "DEFAULT TEXT";
 
     bool is_pushed_ = false;
     bool is_hovered_ = false;
-    unsigned long long hover_timer_ = 0.0;
-    unsigned long long push_timer_ = 0.0;
-    unsigned long long last_upd_time_ = 0.0;
-    DesignId design_ = DSGN_BUTTON_DEFAULT;
+    unsigned long long hover_timer_ = 0;
+    unsigned long long push_timer_ = 0;
+    unsigned long long last_upd_time_ = 0;
+    Vec2d known_mouse_pos_ = Vec2d(0.0, 0.0);
+    DesignId design_ = DSGN_PANEL_DEFAULT;
 };
 
 struct DragButton : public Button {
     DragButton(Panel& panel);
 
-    void on_push(Interaction interaction) override;
-    void on_release(Interaction interaction) override;
+    void onPush() override;
+    void onRelease() override;
 
    private:
     Panel& panel_;

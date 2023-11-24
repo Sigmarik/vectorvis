@@ -46,17 +46,21 @@ BLD_SUFFIX = _v$(BLD_VERSION)_$(BLD_TYPE)_$(BLD_PLATFORM)$(BLD_FORMAT)
 BUILD_ERRLOG_FNAME = latest_build_err.log
 
 SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
-	-lpthread -lXrandr -lXi -ldl
+	-lpthread -lXrandr -lXi -ldl -lGLEW
 
-LIB_OBJECTS = lib/logger/debug.o	\
-			  lib/logger/logger.o	\
-			  lib/geometry/matrix.o	\
-			  lib/gui/renderable.o	\
-			  lib/gui/interactive.o	\
-			  lib/gui/gui.o			\
-			  lib/gui/scrollbar.o	\
-			  lib/gui/widget.o		\
-			  lib/gui/layout_box.o	\
+IMPL_OBJECTS = Impl/Graphics/RenderTarget.o	\
+			   Impl/Math/TransformStack.o	\
+			   Impl/Widget.o
+
+LIB_OBJECTS = $(IMPL_OBJECTS)			\
+			  lib/logger/debug.o		\
+			  lib/logger/logger.o		\
+			  lib/graphics/AssetShelf.o	\
+			  lib/gui/anchor.o			\
+			  lib/gui/environment.o		\
+			  lib/gui/events.o			\
+			  lib/gui/gui.o				\
+			  lib/world_timer.o			\
 			  lib/hash/murmur.o
 
 MAIN_NAME = main
@@ -67,12 +71,6 @@ MAIN_MAIN = src/main.cpp
 MAIN_OBJECTS = $(LIB_OBJECTS)					\
 	src/utils/main_utils.o						\
 	src/utils/common_utils.o					\
-	src/gui_elements/buttons/image_scrollbar.o	\
-	src/gui_elements/image_view.o				\
-	src/gui_elements/visuals/fps_meter.o		\
-	src/gui_elements/drawing/tool_selector.o	\
-	src/editor_tools/tool.o						\
-	src/editor_tools/filter.o					\
 	src/io/main_io.o
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))

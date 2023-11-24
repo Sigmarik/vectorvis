@@ -21,6 +21,16 @@ struct ScrollbarBar;
 
 static const double SCROLLBAR_HANDLE_HEIGHT = 0.1;
 
+enum ScrollbarType {
+    SCRLLBR_HORIZONTAL,
+    SCRLLBR_VERTICAL,
+};
+
+enum ScrollbarButtonType {
+    SCRLL_UP,
+    SCRLL_DOWN,
+};
+
 /**
  * @brief Draggable scrollbar handle
  *
@@ -28,9 +38,9 @@ static const double SCROLLBAR_HANDLE_HEIGHT = 0.1;
 struct ScrollbarHandle : public Button {
     ScrollbarHandle(ScrollbarBar& bar);
 
-    void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
+    bool on_mouse_move(const Vec2d& mouse_pos, TransformStack& stack) override;
 
-    void on_push(Interaction interaction) override;
+    void on_push() override;
 
    private:
     ScrollbarHandle(const ScrollbarHandle& handle) = default;
@@ -44,13 +54,15 @@ struct ScrollbarHandle : public Button {
  * @brief Central part of the scrollbar, the one which the handle slides in
  *
  */
-struct ScrollbarBar : public Panel {
+struct ScrollbarBar : public Button {
     ScrollbarBar(Scrollbar& bar);
 
-    void on_event(MatrixStack<Mat33d>& stack, Interaction interaction) override;
+    void on_push() override;
 
     double get_percentage() const;
     void set_percentage(double percentage);
+
+    ScrollbarType get_type() const { return type_; }
 
    private:
     ScrollbarBar(const ScrollbarBar& bar) = default;
@@ -58,11 +70,7 @@ struct ScrollbarBar : public Panel {
 
     ScrollbarHandle handle_;
     Scrollbar& bar_;
-};
-
-enum ScrollbarButtonType {
-    SCRLL_UP,
-    SCRLL_DOWN,
+    ScrollbarType type_;
 };
 
 /**
@@ -73,9 +81,9 @@ enum ScrollbarButtonType {
 struct ScrollbarControlBtn : public Button {
     ScrollbarControlBtn(Scrollbar& bar, ScrollbarButtonType type);
 
-    void on_push(Interaction interaction) override;
+    void on_push() override;
 
-    void tick() override;
+    bool on_tick(double delta_time) override;
 
    private:
     ScrollbarControlBtn(const ScrollbarControlBtn& btn) = default;
@@ -89,25 +97,20 @@ struct ScrollbarControlBtn : public Button {
     unsigned long long update_time_ = 0;
 };
 
-enum ScrollbarType {
-    SCRLLBR_HORIZONTAL,
-    SCRLLBR_VERTICAL,
-};
-
 /**
  * @brief Scrollbar GUI element
  *
  */
 struct Scrollbar : Panel {
     Scrollbar(Vec2d center, double length,
-              ScrollbarType type = SCRLLBR_HORIZONTAL);
+              ScrollbarType type = SCRLLBR_VERTICAL);
 
     virtual void on_update(double percentage) {}
 
     double get_percentage() const;
     void set_percentage(double percentage);
 
-    void apply_anchor(const Vec2d& parent_size) override;
+    ScrollbarType get_type() const { return type_; }
 
    protected:
     ScrollbarType type_ = SCRLLBR_VERTICAL;

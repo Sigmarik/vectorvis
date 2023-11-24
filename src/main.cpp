@@ -14,16 +14,17 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window.hpp>
 
-#include "editor_tools/filter.h"
-#include "editor_tools/tool.h"
-#include "gui_elements/buttons/image_scrollbar.h"
-#include "gui_elements/drawing/tool_selector.h"
-#include "gui_elements/image_view.h"
-#include "gui_elements/visuals/fps_meter.h"
+#include "Impl/Graphics/RenderTarget.h"
+#include "Impl/Math/TransformStack.h"
+#include "Plug/Math.h"
+#include "gui/anchor.h"
+#include "gui/environment.h"
+#include "gui/gui.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
 #include "logger/logger.h"
 #include "utils/main_utils.h"
+#include "world_timer.h"
 
 #define MAIN
 
@@ -50,69 +51,24 @@ int main(const int argc, char** argv) {
                             "TILT (build from " __DATE__ __TIME__ ")",
                             sf::Style::Default, window_settings);
 
+    RenderTarget window_rt(window);
+
     window.setSize(sf::Vector2u(800, 600));
 
-    static Panel root_panel(Vec2d(0.0, 0.0), Vec2d(1.0, 1.0));
-    root_panel.set_design(DSGN_PANEL_DEBUG);
+    Panel panel(Anchor(Vec2d(0.0, 0.0), Vec2d(7.0, 7.0), Vec2d(0.0, 0.0),
+                       Vec2d(0.0, 0.0)));
 
-    static Panel menu_panel(Vec2d(0.0, -0.25), Vec2d(1.0, 0.5));
-    menu_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
+    Panel subpanel1(Anchor(Vec2d(-1.0, -1.5), Vec2d(2.0, 1.0), Vec2d(0.0, 0.0),
+                           Vec2d(0.0, 0.0)));
 
-    static Panel subwindow_panel(Vec2d(0.0, 0.0), Vec2d(-1.0, 0.5));
-    subwindow_panel.set_orderable(true);
-    root_panel.add_interactive_child(
-        subwindow_panel, Anchor(Vec2d(1.0, -0.25), Vec2d(-1.0, 0.5)));
+    Panel subpanel2(Anchor(Vec2d(1.5, 2.0), Vec2d(2.4, 1.2), Vec2d(0.0, 0.0),
+                           Vec2d(0.0, 0.0)));
+    subpanel2.setDesign(DSGN_PANEL_RED);
 
-    static Panel image_panel(Vec2d(0.0, 0.0), Vec2d(13.0, 13.0));
-    image_panel.set_design(DSGN_PANEL_SOLID_LIGHT);
+    panel.addChild(subpanel1);
+    panel.addChild(subpanel2);
 
-    subwindow_panel.add_interactive_child(image_panel);
-
-    static DragButton image_drag(image_panel);
-
-    static ToolPalette tools;
-    static FilterPalette filters;
-
-    static ToolSelector selector(tools);
-    image_panel.add_interactive_child(selector);
-
-    static ImageView editor(&tools, &filters, Vec2d(0.0, 0.0),
-                            Vec2d(12.0, 12.0), "assets/example.bmp");
-    image_panel.add_interactive_child(editor);
-
-    static ImageScrollbar horiz_scrollbar(Vec2d(0.0, -(6.0 + SCROLLBAR_WIDTH)),
-                                          12.0, editor, SCRLLBR_HORIZONTAL);
-    image_panel.add_interactive_child(horiz_scrollbar);
-
-    static ImageScrollbar vert_scrollbar(Vec2d(6.0 + SCROLLBAR_WIDTH, 0.0),
-                                         12.0, editor, SCRLLBR_VERTICAL);
-    image_panel.add_interactive_child(vert_scrollbar);
-
-    static Panel tool_panel(Vec2d(1.0, 0.0), Vec2d(2.0, 0.5));
-    tool_panel.set_design(DSGN_PANEL_SOLID_DARK);
-    root_panel.add_interactive_child(
-        tool_panel, Anchor(Vec2d(-0.5, -0.25), Vec2d(0.0, 0.5)));
-
-    static Button file_btn(Vec2d(0.5, 0.0), Vec2d(1.0, 1.0), "File");
-    static Button edit_btn(Vec2d(1.5, 0.0), Vec2d(1.0, 1.0), "Edit");
-    static Button selection_btn(Vec2d(2.5, 0.0), Vec2d(1.0, 1.0), "Select");
-    menu_panel.add_interactive_child(file_btn,
-                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
-    menu_panel.add_interactive_child(edit_btn,
-                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
-    menu_panel.add_interactive_child(selection_btn,
-                                     Anchor(Vec2d(-0.5, 0.0), Vec2d(0.0, 1.0)));
-
-    static FpsMeter fps_meter(Vec2d(-0.1, -0.1), 1.0);
-    menu_panel.add_interactive_child(fps_meter,
-                                     Anchor(Vec2d(0.5, 0.5), Vec2d(0.0, 0.0)));
-
-    root_panel.add_interactive_child(menu_panel,
-                                     Anchor(Vec2d(0.0, 0.5), Vec2d(1.0, 0.0)));
-
-    static MatrixStack<Mat33d> render_stack(Mat33d(1.0));
-
-    AssetShelf assets;
+    static TransformStack render_stack;
 
     unsigned long long last_tick_time = WorldTimer::get();
     unsigned long long last_plt_update = WorldTimer::get();
@@ -127,32 +83,28 @@ int main(const int argc, char** argv) {
             (double)(new_tick_time - last_tick_time) / 1000000.0;
         last_tick_time = new_tick_time;
 
-        Mat33d screen_matrix =
-            get_screen_matrix(window.getSize().x, window.getSize().y);
+        plug::Transform screen_matrix =
+            get_screen_transform(window.getSize().x, window.getSize().y);
 
-        render_stack.push(screen_matrix);
+        render_stack.enter(screen_matrix);
 
         sf::Event event;
         while (window.pollEvent(event)) {
-            root_panel.on_event(
-                render_stack,
-                (Interaction){
-                    .event = &event, .window = &window, .obstructed = false});
             if (event.type == sf::Event::Closed) window.close();
         }
 
-        root_panel.set_size(Vec2d((double)window.getSize().x / 50.0,
-                                  (double)window.getSize().y / 50.0));
+        Environment::setScreenSize(
+            Vec2d(window.getSize().x, window.getSize().y));
 
         window.clear();
 
-        root_panel.render(render_stack, window, assets);
+        window.setActive(true);
+
+        panel.draw(render_stack, window_rt);
 
         window.display();
 
-        root_panel.tick();
-
-        render_stack.pop();
+        render_stack.leave();
     }
 
     return errno == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
