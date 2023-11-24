@@ -60,13 +60,18 @@ int main(const int argc, char** argv) {
 
     Panel subpanel1(Anchor(Vec2d(-1.0, -1.5), Vec2d(2.0, 1.0), Vec2d(0.0, 0.0),
                            Vec2d(0.0, 0.0)));
+    subpanel1.setDesign(DSGN_PANEL_BLUE);
 
     Panel subpanel2(Anchor(Vec2d(1.5, 2.0), Vec2d(2.4, 1.2), Vec2d(0.0, 0.0),
                            Vec2d(0.0, 0.0)));
     subpanel2.setDesign(DSGN_PANEL_RED);
 
+    Panel subpanel3(Anchor(Vec2d(-1.7, 1.0), Vec2d(2.0, 1.6), Vec2d(0.0, 0.0),
+                           Vec2d(0.0, 0.0)));
+
     panel.addChild(subpanel1);
     panel.addChild(subpanel2);
+    panel.addChild(subpanel3);
 
     static TransformStack render_stack;
 

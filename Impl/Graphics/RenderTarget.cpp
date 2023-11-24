@@ -59,8 +59,8 @@ void RenderTarget::draw(const plug::VertexArray& array,
 
     for (size_t id = 0; id < sf_array.getVertexCount(); ++id) {
         sf_array[id].texCoords =
-            sf::Vector2f(sf_array[id].texCoords.x * texture.width,
-                         sf_array[id].texCoords.y * texture.height);
+            sf::Vector2f(sf_array[id].texCoords.x * (float)texture.width,
+                         sf_array[id].texCoords.y * (float)texture.height);
     }
 
     static sf::Texture sf_texture;

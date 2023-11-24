@@ -12,14 +12,8 @@
 #include "environment.h"
 #include "world_timer.h"
 
-static sf::Vector2f to_vector2f(const Vec2d& vector) {
-    return sf::Vector2f((float)vector.x, (float)vector.y);
-}
-
 void Panel::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     static plug::VertexArray vertices(plug::PrimitiveType::Quads, 9 * 4);
-
-    DesignDescriptor design = AssetShelf::getDesign(design_);
 
     constructMesh(vertices, stack);
 
@@ -81,8 +75,9 @@ void Panel::constructMesh(plug::VertexArray& array,
 
     double shift = 1.5 * abs_margin / DPU;
 
-    Vec2d uv_margin = Vec2d((double)abs_margin, (double)abs_margin) /
-                      Vec2d(design.image.width, design.image.height);
+    Vec2d uv_margin =
+        Vec2d(abs_margin, abs_margin) /
+        Vec2d((double)design.image.width, (double)design.image.height);
 
     // clang-format off
     verts[0][3].position = getAbsCorner(Corner::TopLeft);
@@ -141,26 +136,6 @@ void Panel::constructMesh(plug::VertexArray& array,
             array[id++] = verts[quad_x][quad_y + 1];
         }
     }
-}
-
-static plug::Transform inverse(const plug::Transform& transform) {
-    Vec2d inverse_scale =
-        Vec2d(1.0 / transform.getScale().x, 1.0 / transform.getScale().y);
-    Vec2d inverse_offset = transform.getOffset() * -1.0 / transform.getScale();
-
-    return plug::Transform(inverse_offset, inverse_scale);
-}
-
-static sf::Glsl::Mat3 get_matrix(const plug::Transform& transform) {
-    // clang-format off
-    sf::Glsl::Mat3 sf_matrix({(float)transform.getScale().x, 0.0f,
-                              (float)transform.getOffset().x,
-                              0.0f, (float)transform.getScale().y,
-                              (float)transform.getOffset().y,
-                              0.0f, 0.0f, 1.0f});
-    // clang-format on
-
-    return sf_matrix;
 }
 
 void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
