@@ -3,6 +3,8 @@
 #include <GL/glew.h>
 
 #include <SFML/Graphics/Glsl.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Graphics/VertexBuffer.hpp>
 #include <SFML/OpenGL.hpp>
@@ -10,6 +12,7 @@
 #include "Impl/Graphics/RenderTarget.h"
 #include "anchor.h"
 #include "environment.h"
+#include "graphics/sf_cheatsheet.hpp"
 #include "world_timer.h"
 
 void Panel::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
@@ -17,7 +20,9 @@ void Panel::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
 
     constructMesh(vertices, stack);
 
-    target.draw(vertices, AssetShelf::getDesign(design_).image);
+    plug::Texture& texture = AssetShelf::getDesign(getDesign()).image;
+
+    target.draw(vertices, texture);
 
     stack.enter(getLocalCoords());
 
@@ -42,6 +47,11 @@ void Panel::onEvent(const plug::Event& event, plug::EHC& context) {
 }
 
 void Panel::onMouseMove(const plug::MouseMoveEvent& event, plug::EHC& context) {
+    if (!is_mp_valid_) {
+        old_mouse_pos_ = event.pos;
+        is_mp_valid_ = true;
+    }
+
     if (follows_mouse_) {
         Vec2d delta = context.stack.top().restore(event.pos) -
                       context.stack.top().restore(old_mouse_pos_);
@@ -53,7 +63,10 @@ void Panel::onMouseMove(const plug::MouseMoveEvent& event, plug::EHC& context) {
     Widget::onMouseMove(event, context);
 }
 
-void Panel::addChild(plug::Widget& widget) { children_.push(&widget); }
+void Panel::addChild(plug::Widget& widget) {
+    children_.push(&widget);
+    widget.onParentUpdate(getLayoutBox());
+}
 
 void Panel::onParentUpdate(const plug::LayoutBox& parent_box) {
     Widget::onParentUpdate(parent_box);
@@ -65,8 +78,8 @@ void Panel::onParentUpdate(const plug::LayoutBox& parent_box) {
 
 static const double DPU = 50.0;
 
-void Panel::constructMesh(plug::VertexArray& array,
-                          const plug::TransformStack& stack) {
+void Designable::constructMesh(plug::VertexArray& array,
+                               const plug::TransformStack& stack) {
     plug::Vertex verts[4][4];
 
     DesignDescriptor design = AssetShelf::getDesign(design_);
@@ -121,8 +134,11 @@ void Panel::constructMesh(plug::VertexArray& array,
 
     for (unsigned id_x = 0; id_x < 4; ++id_x) {
         for (unsigned id_y = 0; id_y < 4; ++id_y) {
-            verts[id_x][id_y].position =
-                stack.apply(verts[id_x][id_y].position);
+            plug::Vertex& vertex = verts[id_x][id_y];
+
+            vertex.position = stack.apply(vertex.position);
+            vertex.tex_coords =
+                Vec2d(vertex.tex_coords.x, 1.0 - vertex.tex_coords.y);
         }
     }
 
@@ -138,10 +154,85 @@ void Panel::constructMesh(plug::VertexArray& array,
     }
 }
 
-void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
-    // TODO: Implement
+plug::Transform Panel::getLocalCoords() const {
+    return plug::Transform(getLayoutBox().getPosition());
+}
 
-    Widget::draw(stack, target);
+static const unsigned TEXT_RECT_SIZE = 256;
+static const unsigned TEXT_ASPECT = 16;
+
+static double render_text(plug::Texture& texture, const char* text) {
+    static sf::RenderTexture plot;
+
+    plot.create(TEXT_RECT_SIZE, TEXT_RECT_SIZE);
+    plot.clear(sf::Color(0, 0, 0, 0));
+
+    sf::Text renderable_text(text, AssetShelf::getFont(), 6);
+
+    renderable_text.setStyle(sf::Text::Bold);
+
+    renderable_text.setOrigin(0.0, 0.0);
+    renderable_text.setPosition(0.0, 0.0);
+
+    renderable_text.setScale(1.0 / TEXT_ASPECT, 1.0);
+
+    renderable_text.setColor(sf::Color::White);
+    renderable_text.setCharacterSize(TEXT_RECT_SIZE);
+
+    plot.draw(renderable_text);
+
+    plot.display();
+
+    sf::Image image = plot.getTexture().copyToImage();
+
+    to_plug_texture(image, texture);
+
+    return renderable_text.getGlobalBounds().width;
+}
+
+static const double TEXT_SIZE = 0.26;
+
+void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
+    static plug::VertexArray vertices(plug::PrimitiveType::Quads, 9 * 4);
+
+    constructMesh(vertices, stack);
+
+    target.draw(vertices, AssetShelf::getDesign(getDesign()).image);
+
+    plug::Texture text_texture = plug::Texture(0, 0);
+
+    double width = render_text(text_texture, text_);
+
+    double rel_width = width / (double)TEXT_RECT_SIZE;
+
+    static plug::VertexArray text_verts(plug::PrimitiveType::Quads, 4);
+
+    text_verts[0].tex_coords = Vec2d(0.0, 1.0);
+    text_verts[1].tex_coords = Vec2d(0.0, 0.0);
+    text_verts[2].tex_coords = Vec2d(rel_width, 0.0);
+    text_verts[3].tex_coords = Vec2d(rel_width, 1.0);
+
+    // text_verts[0].tex_coords = Vec2d(0.0, 0.0);
+    // text_verts[1].tex_coords = Vec2d(0.0, 1.0);
+    // text_verts[2].tex_coords = Vec2d(1.0, 1.0);
+    // text_verts[3].tex_coords = Vec2d(1.0, 0.0);
+
+    Vec2d text_center =
+        getLayoutBox().getPosition() + Vec2d(0.0, TEXT_SIZE * 0.23);
+
+    double box_length = rel_width * TEXT_ASPECT * TEXT_SIZE;
+
+    Vec2d text_tl = text_center + Vec2d(-box_length, TEXT_SIZE) / 2.0;
+    Vec2d text_tr = text_center + Vec2d(box_length, TEXT_SIZE) / 2.0;
+    Vec2d text_br = text_center + Vec2d(box_length, -TEXT_SIZE) / 2.0;
+    Vec2d text_bl = text_center + Vec2d(-box_length, -TEXT_SIZE) / 2.0;
+
+    text_verts[0].position = stack.top().apply(text_bl);
+    text_verts[1].position = stack.top().apply(text_tl);
+    text_verts[2].position = stack.top().apply(text_tr);
+    text_verts[3].position = stack.top().apply(text_br);
+
+    target.draw(text_verts, text_texture);
 }
 
 void Button::onTick(const plug::TickEvent& event, plug::EHC& context) {
@@ -158,6 +249,16 @@ void Button::onTick(const plug::TickEvent& event, plug::EHC& context) {
         hover_timer_ += delta_time;
     } else {
         hover_timer_ -= delta_time;
+    }
+
+    if (is_pushed_) {
+        setDesign(DSGN_PANEL_RED_INVERSE);
+    } else {
+        if (is_hovered_) {
+            setDesign(DSGN_PANEL_RED_HIGHLIGHT);
+        } else {
+            setDesign(DSGN_PANEL_RED);
+        }
     }
 }
 
@@ -208,13 +309,9 @@ void Button::onMouseReleased(const plug::MouseReleasedEvent& event,
     Widget::onMouseReleased(event, context);
 }
 
-plug::Transform Panel::getLocalCoords() const {
-    return plug::Transform(getLayoutBox().getPosition());
-}
-
-static const Anchor DRAG_BTN_ANCHOR(Vec2d(0.0, 0.0),
+static const Anchor DRAG_BTN_ANCHOR(Vec2d(0.0, -0.2),
                                     ANCHOR_DEFINITION_SIZE* Vec2d(1.0, 0.0) +
-                                        Vec2d(0.0, 0.2),
+                                        Vec2d(0.1, 0.4),
                                     ANCHOR_DEFINITION_SIZE* Vec2d(-0.5, 0.5),
                                     ANCHOR_DEFINITION_SIZE* Vec2d(0.5, 0.5));
 

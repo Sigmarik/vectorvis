@@ -48,7 +48,7 @@ int main(const int argc, char** argv) {
     window_settings.antialiasingLevel = 8;
 
     sf::RenderWindow window(sf::VideoMode(1, 1),
-                            "TILT (build from " __DATE__ __TIME__ ")",
+                            "TILT (build from " __DATE__ " " __TIME__ ")",
                             sf::Style::Default, window_settings);
 
     RenderTarget window_rt(window);
@@ -68,6 +68,8 @@ int main(const int argc, char** argv) {
 
     Panel subpanel3(Anchor(Vec2d(-1.7, 1.0), Vec2d(2.0, 1.6), Vec2d(0.0, 0.0),
                            Vec2d(0.0, 0.0)));
+
+    DragButton panel_drag(panel);
 
     panel.addChild(subpanel1);
     panel.addChild(subpanel2);
@@ -96,12 +98,25 @@ int main(const int argc, char** argv) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) window.close();
+
+            plug::Event* plug_event = parse_event(event, window);
+            if (plug_event != nullptr) {
+                plug::EHC context = {.stack = render_stack,
+                                     .stopped = false,
+                                     .overlapped = false};
+                panel.onEvent(*plug_event, context);
+            }
         }
+
+        plug::EHC context = {
+            .stack = render_stack, .stopped = false, .overlapped = false};
+
+        panel.onEvent(plug::TickEvent(0.02), context);
 
         Environment::setScreenSize(
             Vec2d(window.getSize().x, window.getSize().y));
 
-        window.clear();
+        window.clear(sf::Color(0, 20, 0));
 
         window.setActive(true);
 

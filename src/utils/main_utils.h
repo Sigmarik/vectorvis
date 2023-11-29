@@ -12,6 +12,10 @@
 #ifndef MAIN_UTILS_H
 #define MAIN_UTILS_H
 
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Window.hpp>
+
+#include "Plug/Event.h"
 #include "Plug/Math.h"
 #include "common_utils.h"
 
@@ -22,5 +26,7 @@
 void print_label();
 
 plug::Transform get_screen_transform(unsigned size_x, unsigned size_y);
+
+plug::Event* parse_event(const sf::Event& event, sf::Window& window);
 
 #endif

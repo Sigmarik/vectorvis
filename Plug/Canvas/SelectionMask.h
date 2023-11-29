@@ -6,7 +6,7 @@
 namespace plug {
 class SelectionMask {
    public:
-    virtual ~SelectionMask() = 0;
+    virtual ~SelectionMask() = default;
 
     /**
      * \brief Get width of mask

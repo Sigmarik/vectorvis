@@ -46,14 +46,10 @@ static void to_sf_image(const plug::Texture& data, sf::Image& image) {
 void RenderTarget::draw(const plug::VertexArray& array,
                         const plug::Texture& texture) {
     sf::Image sf_image;
+
+    fflush(stdout);
+
     to_sf_image(texture, sf_image);
-
-    // sf::Image image = sf_texture.copyToImage();
-
-    // for (unsigned id = 0; id < 32; ++id) {
-    //     printf("%u ", (unsigned)image.getPixelsPtr()[id * 4 + 1]);
-    // }
-    // putc('\n', stdout);
 
     sf::VertexArray sf_array = to_sf_vertex_array(array);
 

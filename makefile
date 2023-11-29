@@ -16,7 +16,7 @@ CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O3 -pie -pthread				    \
 -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers				\
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector					\
 -Wstack-usage=8192 -Wno-unused-parameter -Wno-deprecated-declarations				\
--Wno-unused-variable
+-Wno-unused-variable -Wno-unused-function
 
 CPP_SANITIZER_FLAGS = -fcheck-new 													\
 -fsized-deallocation -fstack-protector -fstrict-overflow -flto-odr-type-merging		\
@@ -50,7 +50,9 @@ SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
 
 IMPL_OBJECTS = Impl/Graphics/RenderTarget.o	\
 			   Impl/Math/TransformStack.o	\
-			   Impl/Widget.o
+			   Impl/Widget.o				\
+			   Impl/Canvas/SelectionMask.o	\
+			   Impl/Canvas/Canvas.o
 
 LIB_OBJECTS = $(IMPL_OBJECTS)			\
 			  lib/logger/debug.o		\

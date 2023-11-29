@@ -11,7 +11,7 @@ class Canvas {
    public:
     Canvas() {}
 
-    virtual ~Canvas() = 0;
+    virtual ~Canvas() = default;
 
     /**
      * \brief Draw on canvas using vertex array mapping

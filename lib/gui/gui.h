@@ -17,8 +17,21 @@
 #include "data_structures/stack.h"
 #include "graphics/AssetShelf.h"
 
-struct Panel : public Widget {
+struct Designable : public Widget {
     using Widget::Widget;
+
+    DesignId getDesign() const { return design_; }
+    void setDesign(DesignId design) { design_ = design; }
+
+    void constructMesh(plug::VertexArray& array,
+                       const plug::TransformStack& stack);
+
+   private:
+    DesignId design_ = DSGN_PANEL_DEFAULT;
+};
+
+struct Panel : public Designable {
+    using Designable::Designable;
 
     ~Panel() = default;
 
@@ -39,28 +52,21 @@ struct Panel : public Widget {
         is_mp_valid_ = false;
     }
 
-    DesignId getDesign() const { return design_; }
-    void setDesign(DesignId design) { design_ = design; }
-
    private:
     plug::Transform getLocalCoords() const;
-
-    void constructMesh(plug::VertexArray& array,
-                       const plug::TransformStack& stack);
 
     Stack<plug::Widget*> children_ = Stack<plug::Widget*>();
 
     bool follows_mouse_ = false;
 
     Vec2d known_mouse_pos_ = Vec2d(0.0, 0.0);
-    DesignId design_ = DSGN_PANEL_DEFAULT;
 
     Vec2d old_mouse_pos_ = Vec2d(0.0, 0.0);
     bool is_mp_valid_ = false;
 };
 
-struct Button : public Widget {
-    using Widget::Widget;
+struct Button : public Designable {
+    using Designable::Designable;
     Button(const Button& button) = default;
     ~Button() = default;
 
@@ -88,7 +94,7 @@ struct Button : public Widget {
     void setDesign(DesignId id) { design_ = id; }
 
    private:
-    const char* text_ = "DEFAULT TEXT";
+    const char* text_ = "UNDEFINED BTN TEXT";
 
     bool is_pushed_ = false;
     bool is_hovered_ = false;
@@ -96,7 +102,7 @@ struct Button : public Widget {
     unsigned long long push_timer_ = 0;
     unsigned long long last_upd_time_ = 0;
     Vec2d known_mouse_pos_ = Vec2d(0.0, 0.0);
-    DesignId design_ = DSGN_PANEL_DEFAULT;
+    DesignId design_ = DSGN_PANEL_RED;
 };
 
 struct DragButton : public Button {

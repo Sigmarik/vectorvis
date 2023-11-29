@@ -12,6 +12,7 @@
 #ifndef __PLUG_GRAPHICS_TEXTURE_H
 #define __PLUG_GRAPHICS_TEXTURE_H
 
+#include <cassert>
 #include <cstddef>
 
 #include "Plug/Color.h"
@@ -23,27 +24,49 @@ namespace plug {
  *
  */
 struct Texture {
-    Texture(size_t width_, size_t height_, Color *data_)
-        : data(data_), width(width_), height(height_) {}
+    Texture(size_t a_width, size_t a_height)
+        : data(new Color[a_width * a_height]),
+          width(a_width),
+          height(a_height) {}
 
-    Texture(size_t width_, size_t height_)
-        : data(new Color[width_ * height_]), width(width_), height(height_) {}
+    Texture(size_t a_width, size_t a_height, const Color *a_data)
+        : Texture(a_width, a_height) {
+        for (size_t i = 0; i < width * height; ++i) {
+            data[i] = a_data[i];
+        }
+    }
+
+    Texture(const Texture &other)
+        : Texture(other.width, other.height, other.data) {}
+
+    Texture &operator=(const Texture &other) = delete;
+
+    ~Texture(void) { delete[] data; }
+
+    plug::Color getPixel(size_t x, size_t y) const {
+        assert(x < width);
+        assert(y < height);
+        return data[y * width + x];
+    }
+
+    void setPixel(size_t x, size_t y, plug::Color color) const {
+        assert(x < width);
+        assert(y < height);
+        data[y * width + x] = color;
+    }
 
     /**
      * @brief Image data
-     *
      */
     Color *data;
 
     /**
      * @brief Image width (in pixels)
-     *
      */
     size_t width;
 
     /**
      * @brief Image height (in pixels)
-     *
      */
     size_t height;
 };

@@ -36,12 +36,12 @@ void Anchor::update(Vec2d parent_size) {
         parent_size / 2.0 - (ANCHOR_DEFINITION_SIZE / 2.0 - bind_tr_);
 
     if (!split_x) {
-        double new_x = bind_bl_.x * parent_size.x;
+        double new_x = bind_bl_.x * parent_size.x / ANCHOR_DEFINITION_SIZE.x;
         new_bl.x = new_x;
         new_tr.x = new_x;
     }
     if (!split_y) {
-        double new_y = bind_bl_.y * parent_size.y;
+        double new_y = bind_bl_.y * parent_size.y / ANCHOR_DEFINITION_SIZE.y;
         new_bl.y = new_y;
         new_tr.y = new_y;
     }

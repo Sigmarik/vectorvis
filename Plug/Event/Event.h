@@ -54,6 +54,14 @@ class Event {
  * @brief Event of mouse changing position
  */
 struct MouseMoveEvent : public Event {
+    MouseMoveEvent(const Vec2d &position, bool shift_pressed, bool ctrl_pressed,
+                   bool alt_pressed)
+        : Event(MouseMove),
+          shift(shift_pressed),
+          ctrl(ctrl_pressed),
+          alt(alt_pressed),
+          pos(position) {}
+
     bool shift; /*!< Shift is pressed */
     bool ctrl;  /*!< Ctrl is pressed */
     bool alt;   /*!< Alt is pressed */
@@ -64,6 +72,14 @@ struct MouseMoveEvent : public Event {
  * @brief Event of mouse button being pressed
  */
 struct MousePressedEvent : public Event {
+    MousePressedEvent(MouseButton button, const Vec2d &position,
+                      bool shift_pressed, bool ctrl_pressed, bool alt_pressed)
+        : Event(MousePressed),
+          button_id(button),
+          shift(shift_pressed),
+          ctrl(ctrl_pressed),
+          alt(alt_pressed),
+          pos(position) {}
     MouseButton button_id; /*!< Pressed button */
     bool shift;            /*!< Shift is pressed */
     bool ctrl;             /*!< Ctrl is pressed */
@@ -75,6 +91,14 @@ struct MousePressedEvent : public Event {
  * @brief Event of mouse button being released
  */
 struct MouseReleasedEvent : public Event {
+    MouseReleasedEvent(MouseButton button, const Vec2d &position,
+                       bool shift_pressed, bool ctrl_pressed, bool alt_pressed)
+        : Event(MouseReleased),
+          button_id(button),
+          shift(shift_pressed),
+          ctrl(ctrl_pressed),
+          alt(alt_pressed),
+          pos(position) {}
     MouseButton button_id; /*!< Released button */
     bool shift;            /*!< Shift is pressed */
     bool ctrl;             /*!< Ctrl is pressed */
@@ -86,6 +110,13 @@ struct MouseReleasedEvent : public Event {
  * @brief Event of keyboard button being pressed
  */
 struct KeyboardPressedEvent : public Event {
+    KeyboardPressedEvent(KeyCode key, bool shift_pressed, bool ctrl_pressed,
+                         bool alt_pressed)
+        : Event(KeyboardPressed),
+          key_id(key),
+          shift(shift_pressed),
+          ctrl(ctrl_pressed),
+          alt(alt_pressed) {}
     KeyCode key_id; /*!< Pressed key */
     bool shift;     /*!< Shift is pressed */
     bool ctrl;      /*!< Ctrl is pressed */
@@ -96,6 +127,13 @@ struct KeyboardPressedEvent : public Event {
  * @brief Event of keyboard button being released
  */
 struct KeyboardReleasedEvent : public Event {
+    KeyboardReleasedEvent(KeyCode key, bool shift_pressed, bool ctrl_pressed,
+                          bool alt_pressed)
+        : Event(KeyboardReleased),
+          key_id(key),
+          shift(shift_pressed),
+          ctrl(ctrl_pressed),
+          alt(alt_pressed) {}
     KeyCode key_id; /*!< Released key */
     bool shift;     /*!< Shift is pressed */
     bool ctrl;      /*!< Ctrl is pressed */
@@ -106,7 +144,9 @@ struct KeyboardReleasedEvent : public Event {
  * @brief Event of time passing
  */
 struct TickEvent : public Event {
-    double delta_time; /*!< Time (in milliseconds) since last TickEvent */
+    TickEvent(double seconds) : Event(Tick), delta_time(seconds) {}
+
+    double delta_time; /*!< Time (in seconds) since last TickEvent */
 };
 
 }  // namespace plug

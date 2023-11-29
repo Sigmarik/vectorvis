@@ -4,31 +4,19 @@
 
 #include <SFML/Graphics/Image.hpp>
 
-DesignDescriptor::DesignDescriptor() : image(0, 0) {
-    delete image.data;
-    image.width = 0;
-    image.height = 0;
-}
+#include "sf_cheatsheet.hpp"
+
+DesignDescriptor::DesignDescriptor() : image(0, 0) {}
 
 void DesignDescriptor::load(const char* path) {
     static sf::Image loader;
 
     loader.loadFromFile(path);
 
-    image = plug::Texture(loader.getSize().x, loader.getSize().y);
+    to_plug_texture(loader, image);
 
-    image.width = loader.getSize().x;
-    image.height = loader.getSize().y;
-    image.data = new plug::Color[image.width * image.height];
-    const sf::Uint8* data = loader.getPixelsPtr();
-
-    for (unsigned id_x = 0; id_x < image.width; ++id_x) {
-        for (unsigned id_y = 0; id_y < image.height; ++id_y) {
-            size_t index = id_y * image.height + id_x;
-            sf::Color pixel = loader.getPixel(id_x, id_y);
-            image.data[index] = plug::Color(pixel.r, pixel.g, pixel.b, pixel.a);
-        }
-    }
+    // printf("Loaded image %s of size %lu, %lu\n", path, image.width,
+    //        image.height);
 }
 
 #define DESIGN(name, path) designs_[DSGN_##name].load(path);
@@ -37,7 +25,7 @@ sf::Font AssetShelf::font_;
 DesignDescriptor AssetShelf::designs_[DESIGN_COUNT];
 
 AssetShelf::AssetShelf() {
-    font_.loadFromFile("assets/fonts/main.ttf");
+    font_.loadFromFile("assets/fonts/8bit.ttf");
 #include "designs.hpp"
 }
 
