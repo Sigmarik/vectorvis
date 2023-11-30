@@ -62,6 +62,7 @@ LIB_OBJECTS = $(IMPL_OBJECTS)			\
 			  lib/gui/environment.o		\
 			  lib/gui/events.o			\
 			  lib/gui/gui.o				\
+			  lib/gui/canvas_view.o		\
 			  lib/world_timer.o			\
 			  lib/hash/murmur.o
 

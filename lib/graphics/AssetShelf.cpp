@@ -14,9 +14,6 @@ void DesignDescriptor::load(const char* path) {
     loader.loadFromFile(path);
 
     to_plug_texture(loader, image);
-
-    // printf("Loaded image %s of size %lu, %lu\n", path, image.width,
-    //        image.height);
 }
 
 #define DESIGN(name, path) designs_[DSGN_##name].load(path);

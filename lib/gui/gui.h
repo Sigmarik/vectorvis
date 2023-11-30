@@ -93,6 +93,9 @@ struct Button : public Designable {
     DesignId getDesign() const { return design_; }
     void setDesign(DesignId id) { design_ = id; }
 
+    const char* getText() const { return text_; }
+    void setText(const char* text) { text_ = text; }
+
    private:
     const char* text_ = "UNDEFINED BTN TEXT";
 

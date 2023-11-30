@@ -11,7 +11,7 @@ class Canvas {
    public:
     Canvas() {}
 
-    virtual ~Canvas() = default;
+    virtual ~Canvas(){};
 
     /**
      * \brief Draw on canvas using vertex array mapping
@@ -23,11 +23,6 @@ class Canvas {
      */
     virtual void draw(const VertexArray &vertex_array,
                       const Texture &texture) = 0;
-
-    /**
-     * \brief Get native handle of canvas' texture
-     */
-    virtual unsigned int getNativeHandle(void) const = 0;
 
     /**
      * \brief Return sise of canvas

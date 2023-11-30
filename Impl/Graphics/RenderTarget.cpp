@@ -3,6 +3,8 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
+#include "graphics/sf_cheatsheet.hpp"
+
 static sf::Vector2f to_vector2f(const Vec2d& vector) {
     return sf::Vector2f((float)vector.x, (float)vector.y);
 }
@@ -28,21 +30,6 @@ void RenderTarget::draw(const plug::VertexArray& array) {
     base_.draw(to_sf_vertex_array(array));
 }
 
-static void to_sf_image(const plug::Texture& data, sf::Image& image) {
-    image.create((unsigned)data.width, (unsigned)data.height);
-
-    for (unsigned id_x = 0; id_x < data.width; ++id_x) {
-        for (unsigned id_y = 0; id_y < data.height; ++id_y) {
-            size_t index = id_y * data.height + id_x;
-
-            plug::Color pixel = data.data[index];
-
-            image.setPixel(id_x, id_y,
-                           sf::Color(pixel.r, pixel.g, pixel.b, pixel.a));
-        }
-    }
-}
-
 void RenderTarget::draw(const plug::VertexArray& array,
                         const plug::Texture& texture) {
     sf::Image sf_image;
@@ -61,6 +48,7 @@ void RenderTarget::draw(const plug::VertexArray& array,
 
     static sf::Texture sf_texture;
     sf_texture.loadFromImage(sf_image);
+    sf_texture.setRepeated(false);
 
     base_.draw(sf_array, &sf_texture);
 }

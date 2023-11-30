@@ -14,7 +14,7 @@ void print_label() {
 
 plug::Transform get_screen_transform(unsigned size_x, unsigned size_y) {
     return plug::Transform(Vec2d(0.5, 0.5),
-                           Vec2d(50.0 / size_x, -50.0 / size_y));
+                           Vec2d(PISKEL_SIZE / size_x, -PISKEL_SIZE / size_y));
 }
 
 static plug::MouseButton sf_mbtn_to_plug_mbtn(sf::Mouse::Button button) {
@@ -96,4 +96,35 @@ plug::Event* parse_event(const sf::Event& event, sf::Window& window) {
     }
 
     return nullptr;
+}
+
+void build_gui(Panel& root) {
+    static Panel top_menu(Anchor(Vec2d(0.0, -0.25),
+                                 Vec2d(ANCHOR_DEFINITION_SIZE.x, 0.5),
+                                 ANCHOR_DEFINITION_SIZE * Vec2d(-0.5, 0.5),
+                                 ANCHOR_DEFINITION_SIZE * Vec2d(0.5, 0.5)));
+
+    static Canvas canvas("assets/example.bmp");
+    static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(7.0, 7.0),
+                                         Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)),
+                                  canvas);
+
+    static Button tools_button(
+        Anchor(Vec2d(0.6, 0.0), Vec2d(1.2, 0.5),
+               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
+               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
+
+    tools_button.setText("Tools");
+    top_menu.addChild(tools_button);
+
+    static Button filters_button(
+        Anchor(Vec2d(0.6 + 1.2, 0.0), Vec2d(1.2, 0.5),
+               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
+               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
+
+    filters_button.setText("Filters");
+    top_menu.addChild(filters_button);
+
+    root.addChild(canvas_view);
+    root.addChild(top_menu);
 }

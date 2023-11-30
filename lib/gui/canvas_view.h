@@ -12,11 +12,11 @@
 #ifndef __GUI_CANVAS_VIEW_H
 #define __GUI_CANVAS_VIEW_H
 
+#include "Impl/Canvas/Canvas.h"
 #include "Impl/Widget.h"
-#include "Plug/Canvas.h"
 
 struct CanvasView : public Widget {
-    CanvasView(const LayoutBox& box, Canvas& canvas);
+    CanvasView(const plug::LayoutBox& box, Canvas& canvas);
 
     void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
 
@@ -29,8 +29,8 @@ struct CanvasView : public Widget {
     void onMouseReleased(const plug::MouseReleasedEvent& event,
                          plug::EHC& context) override;
 
-    void onKeyboardPressed(const KeyboardPressedEvent& event,
-                           EHC& context) override;
+    void onKeyboardPressed(const plug::KeyboardPressedEvent& event,
+                           plug::EHC& context) override;
 
    private:
     Canvas& canvas_;
