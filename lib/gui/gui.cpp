@@ -158,13 +158,13 @@ plug::Transform Panel::getLocalCoords() const {
     return plug::Transform(getLayoutBox().getPosition());
 }
 
-static const unsigned TEXT_RECT_SIZE = 256;
-static const unsigned TEXT_ASPECT = 16;
+static const unsigned TEXT_RECT_WIDTH = 256;
+static const unsigned TEXT_RECT_HEIGHT = 32;
 
 static double render_text(plug::Texture& texture, const char* text) {
     static sf::RenderTexture plot;
 
-    plot.create(TEXT_RECT_SIZE, TEXT_RECT_SIZE);
+    plot.create(TEXT_RECT_WIDTH, TEXT_RECT_HEIGHT);
     plot.clear(sf::Color(0, 0, 0, 0));
 
     sf::Text renderable_text(text, AssetShelf::getFont(), 6);
@@ -174,10 +174,8 @@ static double render_text(plug::Texture& texture, const char* text) {
     renderable_text.setOrigin(0.0, 0.0);
     renderable_text.setPosition(0.0, 0.0);
 
-    renderable_text.setScale(1.0 / TEXT_ASPECT, 1.0);
-
     renderable_text.setColor(sf::Color::White);
-    renderable_text.setCharacterSize(TEXT_RECT_SIZE);
+    renderable_text.setCharacterSize(TEXT_RECT_HEIGHT);
 
     plot.draw(renderable_text);
 
@@ -203,7 +201,7 @@ void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
 
     double width = render_text(text_texture, text_);
 
-    double rel_width = width / (double)TEXT_RECT_SIZE;
+    double rel_width = width / (double)TEXT_RECT_WIDTH;
 
     static plug::VertexArray text_verts(plug::PrimitiveType::Quads, 4);
 
@@ -220,7 +218,8 @@ void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     Vec2d text_center =
         getLayoutBox().getPosition() + Vec2d(0.0, TEXT_SIZE * 0.23);
 
-    double box_length = rel_width * TEXT_ASPECT * TEXT_SIZE;
+    double box_length =
+        TEXT_SIZE * rel_width * TEXT_RECT_WIDTH / TEXT_RECT_HEIGHT;
 
     Vec2d text_tl = text_center + Vec2d(-box_length, TEXT_SIZE) / 2.0;
     Vec2d text_tr = text_center + Vec2d(box_length, TEXT_SIZE) / 2.0;
