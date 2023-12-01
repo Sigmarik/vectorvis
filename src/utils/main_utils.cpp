@@ -110,7 +110,7 @@ void build_gui(Panel& root) {
                                   canvas);
 
     static Button tools_button(
-        Anchor(Vec2d(0.6, 0.0), Vec2d(1.2, 0.5),
+        Anchor(Vec2d(0.7, 0.0), Vec2d(1.4, 0.5),
                Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
                Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
 
@@ -118,7 +118,7 @@ void build_gui(Panel& root) {
     top_menu.addChild(tools_button);
 
     static Button filters_button(
-        Anchor(Vec2d(0.6 + 1.2, 0.0), Vec2d(1.2, 0.5),
+        Anchor(Vec2d(0.7 + 1.4, 0.0), Vec2d(1.4, 0.5),
                Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
                Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
 
