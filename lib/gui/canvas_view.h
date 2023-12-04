@@ -32,7 +32,13 @@ struct CanvasView : public Widget {
     void onKeyboardPressed(const plug::KeyboardPressedEvent& event,
                            plug::EHC& context) override;
 
+    void onKeyboardReleased(const plug::KeyboardReleasedEvent& event,
+                            plug::EHC& context) override;
+
    private:
+    Vec2d getPixelPos(const Vec2d& screen_pos,
+                      const plug::TransformStack& stack);
+
     Canvas& canvas_;
 };
 

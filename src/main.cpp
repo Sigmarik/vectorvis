@@ -17,6 +17,7 @@
 #include "Impl/Graphics/RenderTarget.h"
 #include "Impl/Math/TransformStack.h"
 #include "Plug/Math.h"
+#include "extern/plugin_loader.h"
 #include "io/main_io.h"
 #include "logger/debug.h"
 #include "logger/logger.h"
@@ -51,6 +52,8 @@ int main(const int argc, char** argv) {
     RenderTarget window_rt(window);
 
     window.setSize(sf::Vector2u(800, 600));
+
+    load_plugins();
 
     Anchor window_anchor(Vec2d(0.0, 0.0), Vec2d(7.0, 7.0),
                          ANCHOR_DEFINITION_SIZE / -2.0,

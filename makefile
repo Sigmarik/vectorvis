@@ -2,7 +2,7 @@ PYTHON = python3
 CC = g++
 PROFILER = valgrind
 
-CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O3 -pie -pthread				    \
+CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O3 -pie -fPIC -pthread			\
 -Wall -Wextra -Weffc++				 	 											\
 -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations				\
 -Wcast-align -Wchar-subscripts -Wconditionally-supported							\
@@ -26,6 +26,17 @@ CPP_SANITIZER_FLAGS = -fcheck-new 													\
 }returns-nonnull-attribute,shift,signed-integer-overflow,undefined,${strip 			\
 }unreachable,vla-bound,vptr
 
+BOLD = \\033[1m
+STYLE_RESET = \\033[0m
+
+RED 	= \\033[31m
+GREEN 	= \\033[32m
+YELLOW 	= \\033[33m
+BLUE 	= \\033[34m
+PINK 	= \\033[35m
+CYAN 	= \\033[36m
+GREY 	= \\033[37m
+
 CPP_DEBUG_FLAGS = -D _DEBUG
 
 CPPFLAGS = $(CPP_BASE_FLAGS)
@@ -48,40 +59,32 @@ BUILD_ERRLOG_FNAME = latest_build_err.log
 SFML_ARGS = -lsfml-graphics -lsfml-window -lsfml-system -lglfw -lGL -lX11	\
 	-lpthread -lXrandr -lXi -ldl -lGLEW
 
-IMPL_OBJECTS = Impl/Graphics/RenderTarget.o	\
-			   Impl/Math/TransformStack.o	\
-			   Impl/Widget.o				\
-			   Impl/Canvas/SelectionMask.o	\
-			   Impl/Canvas/Canvas.o
-
-LIB_OBJECTS = $(IMPL_OBJECTS)			\
-			  lib/logger/debug.o		\
-			  lib/logger/logger.o		\
-			  lib/graphics/AssetShelf.o	\
-			  lib/gui/anchor.o			\
-			  lib/gui/environment.o		\
-			  lib/gui/events.o			\
-			  lib/gui/gui.o				\
-			  lib/gui/canvas_view.o		\
-			  lib/world_timer.o			\
-			  lib/hash/murmur.o
+LIB_OBJECTS = $(shell cat lib.flist)
 
 MAIN_NAME = main
 MAIN_BLD_FULL_NAME = $(MAIN_NAME)$(BLD_SUFFIX)
 
 MAIN_MAIN = src/main.cpp
 
-MAIN_OBJECTS = $(LIB_OBJECTS)					\
-	src/utils/main_utils.o						\
-	src/utils/common_utils.o					\
-	src/io/main_io.o
+MAIN_OBJECTS = $(LIB_OBJECTS) $(shell cat src.flist)
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
 
-$(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME): asset $(MAIN_MAIN) $(MAIN_DEPS)
+$(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME): plugin asset $(MAIN_MAIN) $(MAIN_DEPS)
 	@mkdir -p $(BLD_FOLDER)
-	@echo Assembling files $(MAIN_MAIN) $(MAIN_DEPS) $(SFML_ARGS)
+	@echo $(YELLOW)$(BOLD)Assembling $@$(STYLE_RESET)
 	@$(CC) $(MAIN_MAIN) $(MAIN_OBJECTS) $(CPPFLAGS) $(SFML_ARGS) -o $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
+
+PLUGINS = $(shell cat plugins.flist)
+
+plugin: $(addprefix assets/plugins/, $(PLUGINS))
+
+assets/plugins/%: plugins/%.so
+	@cp $^ $@.so
+
+%.so: %.o $(LIB_OBJECTS)
+	@echo $(YELLOW)$(BOLD)Assembling plugin $@$(STYLE_RESET)
+	@$(CC) $(LIB_OBJECTS) $(CPPFLAGS) -shared $(firstword $^) -o $@
 
 TEST_MAIN = ./gtest/gtest.o
 LIBGTEST_MAIN = /usr/lib/libgtest_main.a
@@ -95,6 +98,7 @@ test: $(TEST_MAIN) $(MAIN_DEPS)
 	@cd $(BLD_FOLDER) && exec ./test_$(MAIN_BLD_FULL_NAME)
 
 run: asset $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
+	@echo $(PINK)$(BOLD)Running the program$(STYLE_RESET)
 	@cd $(BLD_FOLDER) && exec ./$(MAIN_BLD_FULL_NAME) $(ARGS)
 
 debug: asset $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
@@ -113,13 +117,13 @@ asset:
 	@cp -r $(ASSET_FOLDER)/. $(BLD_FOLDER)/$(ASSET_FOLDER)
 
 %.o: %.cpp
-	@echo Building file $^
+	@echo $(YELLOW)Building file $^$(STYLE_RESET)
 	@mkdir -p $(LOGS_FOLDER)
 	@$(CC) $(CPPFLAGS) -c $^ -o $@ > $(BUILD_LOG_NAME)
 
 LST_NAME = asm_listing.log
 %.o: %.s
-	@echo Building assembly file $^
+	@echo $(YELLOW)Building assembly file $^$(STYLE_RESET)
 	@mkdir -p $(LOGS_FOLDER)
 	@nasm -f elf64 -l $(LST_NAME) $^ -o $@ > $(BUILD_LOG_NAME)
 
