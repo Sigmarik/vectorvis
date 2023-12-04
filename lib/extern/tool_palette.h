@@ -20,6 +20,7 @@
 struct ToolPalette {
     static void addTool(plug::Tool& tool);
     static void selectTool(size_t id);
+    static size_t selectionId() { return id_; }
 
     static size_t size();
 

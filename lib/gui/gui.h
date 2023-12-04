@@ -52,11 +52,10 @@ struct Panel : public Designable {
         is_mp_valid_ = false;
     }
 
-   private:
-    plug::Transform getLocalCoords() const;
-
+   protected:
     Stack<plug::Widget*> children_ = Stack<plug::Widget*>();
 
+   private:
     bool follows_mouse_ = false;
 
     Vec2d known_mouse_pos_ = Vec2d(0.0, 0.0);
@@ -95,6 +94,9 @@ struct Button : public Designable {
 
     const char* getText() const { return text_; }
     void setText(const char* text) { text_ = text; }
+
+    bool isPushed() const { return is_pushed_; }
+    bool isHovered() const { return is_hovered_; }
 
    private:
     const char* text_ = "UNDEFINED BTN TEXT";

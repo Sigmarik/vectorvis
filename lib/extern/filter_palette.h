@@ -18,8 +18,12 @@
 struct FilterPalette {
     static void addFilter(plug::Filter& filter);
     static void setActive(unsigned id);
+    static size_t activeId() { return id_; }
 
     static plug::Filter& getFilter();
+    static plug::Filter& getFilter(size_t id);
+
+    static size_t size() { return filters_.size(); }
 
    private:
     FilterPalette() = default;

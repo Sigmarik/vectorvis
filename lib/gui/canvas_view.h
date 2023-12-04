@@ -13,12 +13,15 @@
 #define __GUI_CANVAS_VIEW_H
 
 #include "Impl/Canvas/Canvas.h"
+#include "Impl/Tool/ColorPalette.h"
 #include "Impl/Widget.h"
 
 struct CanvasView : public Widget {
     CanvasView(const plug::LayoutBox& box, Canvas& canvas);
 
     void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
+
+    void onEvent(const plug::Event& event, plug::EHC& context) override;
 
     void onMouseMove(const plug::MouseMoveEvent& event,
                      plug::EHC& context) override;
@@ -36,10 +39,13 @@ struct CanvasView : public Widget {
                             plug::EHC& context) override;
 
    private:
+    plug::Transform getCanvasCoords() const;
+
     Vec2d getPixelPos(const Vec2d& screen_pos,
                       const plug::TransformStack& stack);
 
     Canvas& canvas_;
+    ColorPalette palette_ = ColorPalette();
 };
 
 #endif

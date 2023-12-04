@@ -154,10 +154,6 @@ void Designable::constructMesh(plug::VertexArray& array,
     }
 }
 
-plug::Transform Panel::getLocalCoords() const {
-    return plug::Transform(getLayoutBox().getPosition());
-}
-
 static const unsigned TEXT_RECT_WIDTH = 256;
 static const unsigned TEXT_RECT_HEIGHT = 32;
 

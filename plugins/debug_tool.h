@@ -12,7 +12,9 @@
 #ifndef __PLUGINS_DEBUG_TOOL_H
 #define __PLUGINS_DEBUG_TOOL_H
 
+#include "Impl/Widget.h"
 #include "Plug/Tool.h"
+#include "gui/anchor.h"
 
 struct DebugToolData : public plug::PluginData {
     const char *getName(void) const override { return "Debug tool"; }
@@ -47,17 +49,20 @@ struct DebugTool : public plug::Tool {
 
     void onModifier3(const plug::ControlState &state) override {}
 
-    void onMove(const Vec2d &position) override {}
+    void onMove(const Vec2d &position) override;
 
     void onConfirm(void) override {}
 
     void onCancel(void) override {}
 
-    plug::Widget *getWidget() override { return nullptr; }
+    plug::Widget *getWidget() override;
 
    private:
     static DebugTool instance_;
     static DebugToolData data_;
+
+    Widget preview_ = Widget(Anchor(Vec2d(0.0, 0.0), Vec2d(100.0, 100.0),
+                                    Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
 };
 
 extern "C" plug::Plugin *loadPlugin(void);

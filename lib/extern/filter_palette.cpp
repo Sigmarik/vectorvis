@@ -19,3 +19,9 @@ plug::Filter& FilterPalette::getFilter() {
 
     return *filters_[id_];
 }
+
+plug::Filter& FilterPalette::getFilter(size_t id) {
+    assert(id < filters_.size());
+
+    return *filters_[id];
+}

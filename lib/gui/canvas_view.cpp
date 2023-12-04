@@ -21,6 +21,32 @@ void CanvasView::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     vertices[3].tex_coords = Vec2d(0.0, 1.0);
 
     target.draw(vertices, canvas_.getTexture());
+
+    stack.enter(getCanvasCoords());
+
+    plug::Tool& tool = ToolPalette::getTool();
+
+    if (tool.getWidget()) {
+        tool.getWidget()->draw(stack, target);
+    }
+
+    stack.leave();
+}
+
+void CanvasView::onEvent(const plug::Event& event, plug::EHC& context) {
+    context.stack.enter(getCanvasCoords());
+
+    plug::Tool& tool = ToolPalette::getTool();
+
+    if (tool.getWidget()) {
+        tool.getWidget()->onEvent(event, context);
+    }
+
+    context.stack.leave();
+
+    if (context.stopped) return;
+
+    Widget::onEvent(event, context);
 }
 
 void CanvasView::onMouseMove(const plug::MouseMoveEvent& event,
@@ -29,7 +55,7 @@ void CanvasView::onMouseMove(const plug::MouseMoveEvent& event,
 
     tool.onMove(getPixelPos(event.pos, context.stack));
 
-    if (!covers(context.stack, event.pos)) context.stopped = true;
+    if (covers(context.stack, event.pos)) context.stopped = true;
 }
 
 void CanvasView::onMousePressed(const plug::MousePressedEvent& event,
@@ -124,13 +150,17 @@ void CanvasView::onKeyboardPressed(const plug::KeyboardPressedEvent& event,
 void CanvasView::onKeyboardReleased(const plug::KeyboardReleasedEvent& event,
                                     plug::EHC& context) {}
 
+plug::Transform CanvasView::getCanvasCoords() const {
+    return plug::Transform(
+        getLayoutBox().getSize() * Vec2d(-0.5, 0.5),
+        getLayoutBox().getSize() / canvas_.getSize() * Vec2d(1.0, -1.0));
+}
+
 Vec2d CanvasView::getPixelPos(const Vec2d& screen_pos,
                               const plug::TransformStack& stack) {
     Vec2d pos = screen_pos;
 
-    pos = stack.restore(pos) / getLayoutBox().getSize();
-    pos += Vec2d(0.5, 0.5);
-    pos *= canvas_.getSize();
+    Vec2d local_pos = stack.restore(pos);
 
-    return pos;
+    return getCanvasCoords().restore(local_pos);
 }

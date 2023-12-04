@@ -2,6 +2,11 @@
 
 #include <stdlib.h>
 
+#include "extern/filter_palette.h"
+#include "extern/tool_palette.h"
+#include "gui/buttons/filter_selector_btn.h"
+#include "gui/buttons/tool_selector_btn.h"
+#include "gui/dropdown_list.h"
 #include "lib/logger/logger.h"
 #include "src/config.h"
 
@@ -98,29 +103,89 @@ plug::Event* parse_event(const sf::Event& event, sf::Window& window) {
     return nullptr;
 }
 
+static void construct_tool_list(Panel& holder) {
+    plug::LayoutBox& box = holder.getLayoutBox();
+
+    box.setSize(box.getSize() + Vec2d(0.0, 0.5 * (double)ToolPalette::size()));
+    box.setPosition(box.getPosition() +
+                    Vec2d(0.0, -0.25 * (double)ToolPalette::size()));
+
+    for (size_t id = 0; id < ToolPalette::size(); ++id) {
+        const plug::PluginData* data = ToolPalette::getTool(id).getPluginData();
+
+        ToolSelectionButton* button = new ToolSelectionButton(
+            id, Anchor(Vec2d(0.0, -0.5 * (double)id - 0.25),
+                       Vec2d(holder.getLayoutBox().getSize().x, 0.5),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5)));
+
+        button->setText(data != nullptr ? data->getName() : "Unnamed Tool");
+
+        holder.addChild(*button);
+    }
+}
+
+static void construct_filter_list(Panel& holder) {
+    plug::LayoutBox& box = holder.getLayoutBox();
+
+    box.setSize(box.getSize() +
+                Vec2d(0.0, 0.5 * (double)FilterPalette::size()));
+    box.setPosition(box.getPosition() +
+                    Vec2d(0.0, -0.25 * (double)FilterPalette::size()));
+
+    for (size_t id = 0; id < FilterPalette::size(); ++id) {
+        const plug::PluginData* data =
+            FilterPalette::getFilter(id).getPluginData();
+
+        FilterSelectionButton* button = new FilterSelectionButton(
+            id, Anchor(Vec2d(0.0, -0.5 * (double)id - 0.25),
+                       Vec2d(holder.getLayoutBox().getSize().x, 0.5),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5)));
+
+        button->setText(data != nullptr ? data->getName() : "Unnamed Filter");
+
+        holder.addChild(*button);
+    }
+}
+
 void build_gui(Panel& root) {
     static Panel top_menu(Anchor(Vec2d(0.0, -0.25),
                                  Vec2d(ANCHOR_DEFINITION_SIZE.x, 0.5),
                                  ANCHOR_DEFINITION_SIZE * Vec2d(-0.5, 0.5),
                                  ANCHOR_DEFINITION_SIZE * Vec2d(0.5, 0.5)));
 
+    static ColorPalette palette = ColorPalette();
     static Canvas canvas("assets/example.bmp");
+
+    for (size_t id = 0; id < ToolPalette::size(); ++id) {
+        plug::Tool& tool = ToolPalette::getTool(id);
+        tool.setActiveCanvas(canvas);
+        tool.setColorPalette(palette);
+    }
+
     static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(7.0, 7.0),
                                          Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)),
                                   canvas);
 
-    static Button tools_button(
-        Anchor(Vec2d(0.7, 0.0), Vec2d(1.4, 0.5),
-               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
-               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
+    static Panel tool_list(Anchor(Vec2d(0.8, -0.25), Vec2d(3.0, 0.0),
+                                  Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
+    construct_tool_list(tool_list);
+    static DropdownList tools_button(
+        tool_list, Anchor(Vec2d(0.7, 0.0), Vec2d(1.4, 0.5),
+                          Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
+                          Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
 
     tools_button.setText("Tools");
     top_menu.addChild(tools_button);
 
-    static Button filters_button(
-        Anchor(Vec2d(0.7 + 1.4, 0.0), Vec2d(1.4, 0.5),
-               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
-               Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
+    static Panel filter_list(Anchor(Vec2d(0.8, -0.25), Vec2d(3.0, 0.0),
+                                    Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
+    construct_filter_list(filter_list);
+    static DropdownList filters_button(
+        filter_list, Anchor(Vec2d(0.7 + 1.4, 0.0), Vec2d(1.4, 0.5),
+                            Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),
+                            Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0)));
 
     filters_button.setText("Filters");
     top_menu.addChild(filters_button);

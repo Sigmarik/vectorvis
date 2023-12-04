@@ -18,6 +18,12 @@ void DebugTool::onMainButton(const plug::ControlState& state,
     printf("Main button event at (%lg, %lg)\n", position.x, position.y);
 }
 
+void DebugTool::onMove(const Vec2d& position) {
+    preview_.getLayoutBox().setPosition(position);
+}
+
+plug::Widget* DebugTool::getWidget() { return &preview_; }
+
 plug::Plugin* loadPlugin(void) {
     static DebugTool tool;
     return &tool;
