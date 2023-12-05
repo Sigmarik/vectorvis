@@ -14,6 +14,7 @@ lib/gui/canvas_view.o
 lib/gui/dropdown_list.o
 lib/gui/buttons/tool_selector_btn.o
 lib/gui/buttons/filter_selector_btn.o
+lib/gui/buttons/filter_window.o
 lib/world_timer.o
 lib/extern/filter_palette.o
 lib/extern/tool_palette.o

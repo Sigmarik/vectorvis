@@ -1,5 +1,6 @@
 #include "canvas_view.h"
 
+#include "buttons/filter_window.h"
 #include "extern/filter_palette.h"
 #include "extern/tool_palette.h"
 #include "graphics/sf_cheatsheet.hpp"
@@ -26,7 +27,9 @@ void CanvasView::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
 
     plug::Tool& tool = ToolPalette::getTool();
 
-    if (tool.getWidget()) {
+    if (filter_view_) {
+        filter_view_->draw(stack, target);
+    } else if (tool.getWidget()) {
         tool.getWidget()->draw(stack, target);
     }
 
@@ -38,7 +41,10 @@ void CanvasView::onEvent(const plug::Event& event, plug::EHC& context) {
 
     plug::Tool& tool = ToolPalette::getTool();
 
-    if (tool.getWidget()) {
+    if (filter_view_) {
+        filter_view_->onEvent(event, context);
+        if (!filter_view_->getActive()) filter_view_ = nullptr;
+    } else if (tool.getWidget()) {
         tool.getWidget()->onEvent(event, context);
     }
 
@@ -62,6 +68,7 @@ void CanvasView::onMousePressed(const plug::MousePressedEvent& event,
                                 plug::EHC& context) {
     if (!covers(context.stack, event.pos)) return;
 
+    if (context.stopped) return;
     if (context.overlapped) return;
 
     Vec2d pos = getPixelPos(event.pos, context.stack);

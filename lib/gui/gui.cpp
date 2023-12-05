@@ -154,7 +154,7 @@ void Designable::constructMesh(plug::VertexArray& array,
     }
 }
 
-static const unsigned TEXT_RECT_WIDTH = 256;
+static const unsigned TEXT_RECT_WIDTH = 512;
 static const unsigned TEXT_RECT_HEIGHT = 32;
 
 static double render_text(plug::Texture& texture, const char* text) {
@@ -206,11 +206,6 @@ void Button::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     text_verts[2].tex_coords = Vec2d(rel_width, 0.0);
     text_verts[3].tex_coords = Vec2d(rel_width, 1.0);
 
-    // text_verts[0].tex_coords = Vec2d(0.0, 0.0);
-    // text_verts[1].tex_coords = Vec2d(0.0, 1.0);
-    // text_verts[2].tex_coords = Vec2d(1.0, 1.0);
-    // text_verts[3].tex_coords = Vec2d(1.0, 0.0);
-
     Vec2d text_center =
         getLayoutBox().getPosition() + Vec2d(0.0, TEXT_SIZE * 0.23);
 
@@ -261,6 +256,8 @@ void Button::onMouseMove(const plug::MouseMoveEvent& event,
                          plug::EHC& context) {
     bool hover = !context.overlapped && covers(context.stack, event.pos);
 
+    if (hover) context.overlapped = true;
+
     if (hover && !is_hovered_) {
         is_hovered_ = true;
         hover_timer_ = 0.0;
@@ -285,6 +282,8 @@ void Button::onMousePressed(const plug::MousePressedEvent& event,
     if (cover && !is_pushed_) {
         is_pushed_ = true;
         push_timer_ = 0.0;
+
+        context.stopped = true;
 
         onPush();
     }

@@ -10,7 +10,7 @@ SelectionMask::SelectionMask(const size_t width, const size_t height)
     : width_(width), height_(height), data_(new bool[width * height]) {
     for (size_t it = 0; it < height_; it++) {
         for (size_t jt = 0; jt < width_; jt++) {
-            data_[it * width_ + jt] = false;
+            data_[it * width_ + jt] = true;
         }
     }
 }
@@ -36,7 +36,7 @@ void SelectionMask::build(size_t width, size_t height) {
 
     for (size_t it = 0; it < height_; it++) {
         for (size_t jt = 0; jt < width_; jt++) {
-            data_[it * width_ + jt] = false;
+            data_[it * width_ + jt] = true;
         }
     }
 }

@@ -24,6 +24,10 @@ struct DebugToolData : public plug::PluginData {
 
 struct DebugTool : public plug::Tool {
     DebugTool() = default;
+    DebugTool(const DebugTool &instance) = default;
+    ~DebugTool() = default;
+
+    DebugTool &operator=(const DebugTool &instance) = default;
 
     plug::Plugin *tryGetInterface(size_t interface_id) override;
 
@@ -35,7 +39,7 @@ struct DebugTool : public plug::Tool {
 
     void setColorPalette(plug::ColorPalette &palette) override {}
 
-    void setActiveCanvas(plug::Canvas &canvas) override {}
+    void setActiveCanvas(plug::Canvas &canvas) override { canvas_ = &canvas; }
 
     void onMainButton(const plug::ControlState &state,
                       const Vec2d &position) override;
@@ -58,6 +62,12 @@ struct DebugTool : public plug::Tool {
     plug::Widget *getWidget() override;
 
    private:
+    plug::Canvas *canvas_ = nullptr;
+
+    void apply(const Vec2d &pos);
+
+    bool active_ = false;
+
     static DebugTool instance_;
     static DebugToolData data_;
 

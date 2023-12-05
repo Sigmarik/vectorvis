@@ -113,11 +113,13 @@ static void construct_tool_list(Panel& holder) {
     for (size_t id = 0; id < ToolPalette::size(); ++id) {
         const plug::PluginData* data = ToolPalette::getTool(id).getPluginData();
 
+        double height =
+            0.25 * (double)ToolPalette::size() - 0.5 * (double)id - 0.25;
+
         ToolSelectionButton* button = new ToolSelectionButton(
-            id, Anchor(Vec2d(0.0, -0.5 * (double)id - 0.25),
+            id, Anchor(Vec2d(0.0, height),
                        Vec2d(holder.getLayoutBox().getSize().x, 0.5),
-                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5),
-                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5)));
+                       Vec2d(0.0, 0.5), Vec2d(0.0, 0.5)));
 
         button->setText(data != nullptr ? data->getName() : "Unnamed Tool");
 
@@ -125,7 +127,7 @@ static void construct_tool_list(Panel& holder) {
     }
 }
 
-static void construct_filter_list(Panel& holder) {
+static void construct_filter_list(Panel& holder, CanvasView& view) {
     plug::LayoutBox& box = holder.getLayoutBox();
 
     box.setSize(box.getSize() +
@@ -137,16 +139,21 @@ static void construct_filter_list(Panel& holder) {
         const plug::PluginData* data =
             FilterPalette::getFilter(id).getPluginData();
 
+        double height =
+            0.25 * (double)FilterPalette::size() - 0.5 * (double)id - 0.25;
+
         FilterSelectionButton* button = new FilterSelectionButton(
-            id, Anchor(Vec2d(0.0, -0.5 * (double)id - 0.25),
-                       Vec2d(holder.getLayoutBox().getSize().x, 0.5),
-                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5),
-                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5)));
+            id, view,
+            Anchor(Vec2d(0.0, height),
+                   Vec2d(holder.getLayoutBox().getSize().x, 0.5),
+                   Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
 
         button->setText(data != nullptr ? data->getName() : "Unnamed Filter");
 
         holder.addChild(*button);
     }
+
+    // holder.onParentUpdate(box);
 }
 
 void build_gui(Panel& root) {
@@ -164,7 +171,7 @@ void build_gui(Panel& root) {
         tool.setColorPalette(palette);
     }
 
-    static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(7.0, 7.0),
+    static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(12.0, 12.0),
                                          Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)),
                                   canvas);
 
@@ -181,7 +188,7 @@ void build_gui(Panel& root) {
 
     static Panel filter_list(Anchor(Vec2d(0.8, -0.25), Vec2d(3.0, 0.0),
                                     Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
-    construct_filter_list(filter_list);
+    construct_filter_list(filter_list, canvas_view);
     static DropdownList filters_button(
         filter_list, Anchor(Vec2d(0.7 + 1.4, 0.0), Vec2d(1.4, 0.5),
                             Vec2d(-ANCHOR_DEFINITION_SIZE.x / 2.0, 0.0),

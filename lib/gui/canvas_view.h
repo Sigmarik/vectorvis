@@ -16,8 +16,16 @@
 #include "Impl/Tool/ColorPalette.h"
 #include "Impl/Widget.h"
 
+struct FilterWindow;
+
 struct CanvasView : public Widget {
     CanvasView(const plug::LayoutBox& box, Canvas& canvas);
+    CanvasView(const CanvasView& view) = default;
+    ~CanvasView() = default;
+
+    CanvasView& operator=(const CanvasView& view) = default;
+
+    Canvas& getCanvas() const { return canvas_; }
 
     void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
 
@@ -38,6 +46,9 @@ struct CanvasView : public Widget {
     void onKeyboardReleased(const plug::KeyboardReleasedEvent& event,
                             plug::EHC& context) override;
 
+    void setFilterView(FilterWindow& view) { filter_view_ = &view; }
+    void hideFilterView() { filter_view_ = nullptr; }
+
    private:
     plug::Transform getCanvasCoords() const;
 
@@ -46,6 +57,8 @@ struct CanvasView : public Widget {
 
     Canvas& canvas_;
     ColorPalette palette_ = ColorPalette();
+
+    FilterWindow* filter_view_ = nullptr;
 };
 
 #endif

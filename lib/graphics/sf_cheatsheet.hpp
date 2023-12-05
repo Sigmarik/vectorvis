@@ -16,7 +16,8 @@
 
 #include "Plug/Graphics/Texture.h"
 
-static void to_plug_texture(sf::Image& sf_image, plug::Texture& plug_texture) {
+static void to_plug_texture(const sf::Image& sf_image,
+                            plug::Texture& plug_texture) {
     //! TODO: Replace with casual setter call {
 
     delete plug_texture.data;

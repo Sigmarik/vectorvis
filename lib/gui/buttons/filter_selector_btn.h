@@ -12,11 +12,13 @@
 #ifndef __GUI_BUTTONS_FILTER_SELECT_BTN_H
 #define __GUI_BUTTONS_FILTER_SELECT_BTN_H
 
+#include "filter_window.h"
+#include "gui/canvas_view.h"
 #include "gui/gui.h"
 
 struct FilterSelectionButton : public Button {
-    FilterSelectionButton(size_t id, const plug::LayoutBox& box)
-        : Button(box), id_(id) {}
+    FilterSelectionButton(size_t id, CanvasView& view,
+                          const plug::LayoutBox& box);
 
     void onPush() override;
 
@@ -24,6 +26,8 @@ struct FilterSelectionButton : public Button {
 
    private:
     size_t id_;
+    CanvasView& canvas_;
+    FilterWindow filter_view_;
 };
 
 #endif

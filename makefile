@@ -16,7 +16,7 @@ CPP_BASE_FLAGS = -I./ -I./lib/ -ggdb3 -std=c++2a -O3 -pie -fPIC -pthread			\
 -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers				\
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector					\
 -Wstack-usage=8192 -Wno-unused-parameter -Wno-deprecated-declarations				\
--Wno-unused-variable -Wno-unused-function
+-Wno-unused-variable -Wno-unused-function -Wno-conditionally-supported
 
 CPP_SANITIZER_FLAGS = -fcheck-new 													\
 -fsized-deallocation -fstack-protector -fstrict-overflow -flto-odr-type-merging		\
@@ -70,7 +70,7 @@ MAIN_OBJECTS = $(LIB_OBJECTS) $(shell cat src.flist)
 
 MAIN_DEPS = $(addprefix $(PROJ_DIR)/, $(MAIN_OBJECTS))
 
-$(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME): plugin asset $(MAIN_MAIN) $(MAIN_DEPS)
+$(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME): asset $(MAIN_MAIN) $(MAIN_DEPS)
 	@mkdir -p $(BLD_FOLDER)
 	@echo $(YELLOW)$(BOLD)Assembling $@$(STYLE_RESET)
 	@$(CC) $(MAIN_MAIN) $(MAIN_OBJECTS) $(CPPFLAGS) $(SFML_ARGS) -o $(BLD_FOLDER)/$(MAIN_BLD_FULL_NAME)
@@ -80,6 +80,7 @@ PLUGINS = $(shell cat plugins.flist)
 plugin: $(addprefix assets/plugins/, $(PLUGINS))
 
 assets/plugins/%: plugins/%.so
+	@rm -f $@.so
 	@cp $^ $@.so
 
 %.so: %.o $(LIB_OBJECTS)
@@ -111,7 +112,7 @@ install-gtest:
 	cd /usr/src/gtest && sudo make
 	cd /usr/src/gtest/lib && sudo cp *.a /usr/lib
 
-asset:
+asset: plugin
 	@mkdir -p $(BLD_FOLDER)
 	@mkdir -p $(ASSET_FOLDER)
 	@cp -r $(ASSET_FOLDER)/. $(BLD_FOLDER)/$(ASSET_FOLDER)
@@ -128,13 +129,15 @@ LST_NAME = asm_listing.log
 	@nasm -f elf64 -l $(LST_NAME) $^ -o $@ > $(BUILD_LOG_NAME)
 
 clean:
+	@echo $(RED)Deleting object files$(STYLE_RESET)
 	@find . -type f -name "*.o" -delete
 	@rm -rf ./$(LOGS_FOLDER)/$(BUILD_LOG_NAME)
 
 rmbld:
+	@echo $(RED)Removing buid folders$(STYLE_RESET)
+	@rm -rf $(addsuffix .so, $(addprefix assets/plugins/, $(PLUGINS)))
 	@rm -rf $(BLD_FOLDER)
 	@rm -rf $(TEST_FOLDER)
 
-rm:
-	@make clean
-	@make rmbld
+rm: clean rmbld
+	@echo $(RED)$(BOLD)Project successfully cleared$(STYLE_RESET)
