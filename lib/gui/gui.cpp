@@ -72,7 +72,7 @@ void Panel::onParentUpdate(const plug::LayoutBox& parent_box) {
     Widget::onParentUpdate(parent_box);
 
     for (size_t id = 0; id < children_.size(); ++id) {
-        children_[id]->onParentUpdate(parent_box);
+        children_[id]->onParentUpdate(getLayoutBox());
     }
 }
 
@@ -310,6 +310,7 @@ static const Anchor DRAG_BTN_ANCHOR(Vec2d(0.0, -0.2),
                                     ANCHOR_DEFINITION_SIZE* Vec2d(0.5, 0.5));
 
 DragButton::DragButton(Panel& panel) : Button(DRAG_BTN_ANCHOR), panel_(panel) {
+    setText("");
     panel_.addChild(*this);
 }
 

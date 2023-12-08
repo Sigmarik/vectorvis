@@ -140,4 +140,4 @@ rmbld:
 	@rm -rf $(TEST_FOLDER)
 
 rm: clean rmbld
-	@echo $(RED)$(BOLD)Project successfully cleared$(STYLE_RESET)
+	@echo $(RED)$(BOLD)Project cleanup finished$(STYLE_RESET)

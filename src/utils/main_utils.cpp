@@ -171,9 +171,14 @@ void build_gui(Panel& root) {
         tool.setColorPalette(palette);
     }
 
+    static Panel canvas_frame(Anchor(Vec2d(0.0, 0.0), Vec2d(13.0, 13.0),
+                                     Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
     static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(12.0, 12.0),
                                          Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)),
                                   canvas);
+    canvas_frame.addChild(canvas_view);
+    static DragButton canvas_drag(canvas_frame);
+    canvas_frame.addChild(canvas_drag);
 
     static Panel tool_list(Anchor(Vec2d(0.8, -0.25), Vec2d(3.0, 0.0),
                                   Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
@@ -197,6 +202,6 @@ void build_gui(Panel& root) {
     filters_button.setText("Filters");
     top_menu.addChild(filters_button);
 
-    root.addChild(canvas_view);
+    root.addChild(canvas_frame);
     root.addChild(top_menu);
 }
