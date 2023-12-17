@@ -55,7 +55,7 @@ class Widget : public plug::Widget {
     Vec2d getCorner(Corner corner, const plug::TransformStack& stack) const;
     Vec2d getAbsCorner(Corner corner) const;
 
-    plug::Transform getLocalCoords() const {
+    virtual plug::Transform getLocalCoords() const {
         return plug::Transform(getLayoutBox().getPosition());
     }
 

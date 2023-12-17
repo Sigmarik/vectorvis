@@ -16,7 +16,7 @@
 
 #include <SFML/Graphics/Font.hpp>
 
-static const unsigned MARGIN_DEFAULT = 4;
+static const unsigned MARGIN_DEFAULT = 8;
 
 struct DesignDescriptor {
     DesignDescriptor();

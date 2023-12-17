@@ -13,7 +13,15 @@ void DropdownList::draw(plug::TransformStack& stack,
     Button::draw(stack, target);
 }
 
-void DropdownList::onPush() { opened_ = !opened_; }
+void DropdownList::onPush() {
+    if (opened_) {
+        onClose();
+    } else {
+        onOpen();
+    }
+
+    opened_ = !opened_;
+}
 
 void DropdownList::onEvent(const plug::Event& event, plug::EHC& context) {
     if (opened_) {

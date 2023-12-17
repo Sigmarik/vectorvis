@@ -88,6 +88,8 @@ static void load_plugin(const char* path) {
 
     plug::Plugin* plugin = loader();
 
+    if (!plugin) return;
+
     plug::Filter* filter = (plug::Filter*)plugin->tryGetInterface(
         (size_t)plug::PluginGuid::Filter);
 

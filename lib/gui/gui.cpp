@@ -254,9 +254,7 @@ void Button::onTick(const plug::TickEvent& event, plug::EHC& context) {
 
 void Button::onMouseMove(const plug::MouseMoveEvent& event,
                          plug::EHC& context) {
-    bool hover = !context.overlapped && covers(context.stack, event.pos);
-
-    if (hover) context.overlapped = true;
+    bool hover = covers(context.stack, event.pos);
 
     if (hover && !is_hovered_) {
         is_hovered_ = true;
@@ -317,3 +315,49 @@ DragButton::DragButton(Panel& panel) : Button(DRAG_BTN_ANCHOR), panel_(panel) {
 void DragButton::onPush() { panel_.setFollowsMouse(true); }
 
 void DragButton::onRelease() { panel_.setFollowsMouse(false); }
+
+void TextBlock::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
+    plug::Texture text_texture = plug::Texture(0, 0);
+
+    double width = render_text(text_texture, text_);
+
+    double rel_width = width / (double)TEXT_RECT_WIDTH;
+
+    static plug::VertexArray text_verts(plug::PrimitiveType::Quads, 4);
+
+    text_verts[0].tex_coords = Vec2d(0.0, 1.0);
+    text_verts[1].tex_coords = Vec2d(0.0, 0.0);
+    text_verts[2].tex_coords = Vec2d(rel_width, 0.0);
+    text_verts[3].tex_coords = Vec2d(rel_width, 1.0);
+
+    Vec2d text_center =
+        getLayoutBox().getPosition() + Vec2d(0.0, TEXT_SIZE * 0.23);
+
+    double box_length =
+        TEXT_SIZE * rel_width * TEXT_RECT_WIDTH / TEXT_RECT_HEIGHT;
+
+    double width_delta = getLayoutBox().getSize().x - box_length / 2.0;
+
+    switch (alignment_) {
+        case TextAlignment::Left: {
+            text_center -= Vec2d(width_delta, 0.0);
+        } break;
+        case TextAlignment::Right: {
+            text_center += Vec2d(width_delta, 0.0);
+        } break;
+        default:
+            break;
+    }
+
+    Vec2d text_tl = text_center + Vec2d(-box_length, TEXT_SIZE) / 2.0;
+    Vec2d text_tr = text_center + Vec2d(box_length, TEXT_SIZE) / 2.0;
+    Vec2d text_br = text_center + Vec2d(box_length, -TEXT_SIZE) / 2.0;
+    Vec2d text_bl = text_center + Vec2d(-box_length, -TEXT_SIZE) / 2.0;
+
+    text_verts[0].position = stack.top().apply(text_bl);
+    text_verts[1].position = stack.top().apply(text_tl);
+    text_verts[2].position = stack.top().apply(text_tr);
+    text_verts[3].position = stack.top().apply(text_br);
+
+    target.draw(text_verts, text_texture);
+}

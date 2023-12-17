@@ -15,9 +15,12 @@ const plug::PluginData* DebugTool::getPluginData(void) const { return &data_; }
 
 void DebugTool::onMainButton(const plug::ControlState& state,
                              const Vec2d& position) {
-    apply(position);
-
-    active_ = (state.state == plug::State::Pressed);
+    if ((state.state == plug::State::Pressed)) {
+        apply(position);
+        active_ = true;
+    } else {
+        active_ = false;
+    }
 }
 
 void DebugTool::onMove(const Vec2d& position) {

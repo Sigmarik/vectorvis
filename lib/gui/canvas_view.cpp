@@ -27,13 +27,15 @@ void CanvasView::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
 
     plug::Tool& tool = ToolPalette::getTool();
 
-    if (filter_view_) {
-        filter_view_->draw(stack, target);
-    } else if (tool.getWidget()) {
+    if (tool.getWidget() && filter_view_ == nullptr) {
         tool.getWidget()->draw(stack, target);
     }
 
     stack.leave();
+
+    if (filter_view_) {
+        filter_view_->draw(stack, target);
+    }
 }
 
 void CanvasView::onEvent(const plug::Event& event, plug::EHC& context) {
@@ -41,14 +43,18 @@ void CanvasView::onEvent(const plug::Event& event, plug::EHC& context) {
 
     plug::Tool& tool = ToolPalette::getTool();
 
-    if (filter_view_) {
-        filter_view_->onEvent(event, context);
-        if (!filter_view_->getActive()) filter_view_ = nullptr;
-    } else if (tool.getWidget()) {
+    if (tool.getWidget() && filter_view_ == nullptr) {
         tool.getWidget()->onEvent(event, context);
     }
 
     context.stack.leave();
+
+    if (context.stopped) return;
+
+    if (filter_view_) {
+        filter_view_->onEvent(event, context);
+        if (!filter_view_->getActive()) filter_view_ = nullptr;
+    }
 
     if (context.stopped) return;
 
@@ -70,6 +76,10 @@ void CanvasView::onMousePressed(const plug::MousePressedEvent& event,
 
     if (context.stopped) return;
     if (context.overlapped) return;
+
+    if (!covers(context.stack, event.pos)) {
+        return;
+    }
 
     Vec2d pos = getPixelPos(event.pos, context.stack);
 

@@ -1,5 +1,6 @@
 #include "AssetShelf.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include <SFML/Graphics/Image.hpp>
@@ -8,10 +9,23 @@
 
 DesignDescriptor::DesignDescriptor() : image(0, 0) {}
 
+static bool path_exists(const char* path) {
+    FILE* check = fopen(path, "r");
+    if (check) {
+        fclose(check);
+        return true;
+    }
+    return false;
+}
+
 void DesignDescriptor::load(const char* path) {
     static sf::Image loader;
 
-    loader.loadFromFile(path);
+    if (path_exists(path)) {
+        loader.loadFromFile(path);
+    } else {
+        loader.create(32, 32);
+    }
 
     to_plug_texture(loader, image);
 }
@@ -22,7 +36,8 @@ sf::Font AssetShelf::font_;
 DesignDescriptor AssetShelf::designs_[DESIGN_COUNT];
 
 AssetShelf::AssetShelf() {
-    font_.loadFromFile("assets/fonts/8bit.ttf");
+    const char FONT_PATH[] = "assets/fonts/8bit.ttf";
+    if (path_exists(FONT_PATH)) font_.loadFromFile(FONT_PATH);
 #include "designs.hpp"
 }
 

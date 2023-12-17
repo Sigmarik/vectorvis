@@ -26,6 +26,9 @@ struct DropdownList : public Button {
 
     void onParentUpdate(const plug::LayoutBox& parent_box) override;
 
+    virtual void onOpen(){};
+    virtual void onClose(){};
+
    private:
     bool opened_ = false;
 

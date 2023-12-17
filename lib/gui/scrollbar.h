@@ -1,9 +1,9 @@
 /**
  * @file scrollbar.h
  * @author Kudryashov Ilya (kudriashov.it@phystech.edu)
- * @brief Scrollbar GUI element
+ * @brief Scrollbar widget
  * @version 0.1
- * @date 2023-10-05
+ * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
  *
@@ -14,114 +14,60 @@
 
 #include "gui.h"
 
-static const double SCROLLBAR_WIDTH = 0.25;
+enum class ScrollbarType {
+    Vertical,
+    Horizontal,
+};
 
 struct Scrollbar;
-struct ScrollbarBar;
 
-static const double SCROLLBAR_HANDLE_HEIGHT = 0.1;
+struct ScrollbarBtn : public Button {
+    ScrollbarBtn(bool additive, Scrollbar& owner, const plug::LayoutBox& box);
 
-enum ScrollbarType {
-    SCRLLBR_HORIZONTAL,
-    SCRLLBR_VERTICAL,
-};
+    void onPush() override;
 
-enum ScrollbarButtonType {
-    SCRLL_UP,
-    SCRLL_DOWN,
-};
-
-/**
- * @brief Draggable scrollbar handle
- *
- */
-struct ScrollbarHandle : public Button {
-    ScrollbarHandle(ScrollbarBar& bar);
-
-    bool on_mouse_move(const Vec2d& mouse_pos, TransformStack& stack) override;
-
-    void on_push() override;
+    void onTick(const plug::TickEvent& event, plug::EHC& context) override;
 
    private:
-    ScrollbarHandle(const ScrollbarHandle& handle) = default;
-    ScrollbarHandle& operator=(const ScrollbarHandle& handle) = default;
+    Scrollbar& owner_;
+    bool additive_ = false;
 
-    ScrollbarBar& bar_;
-    Vec2d prev_mouse_pos_ = Vec2d(0.0, 0.0);
+    long long unsigned push_time_ = 0;
 };
 
-/**
- * @brief Central part of the scrollbar, the one which the handle slides in
- *
- */
-struct ScrollbarBar : public Button {
-    ScrollbarBar(Scrollbar& bar);
+struct Scrollbit : public Button {
+    using Button::Button;
 
-    void on_push() override;
-
-    double get_percentage() const;
-    void set_percentage(double percentage);
-
-    ScrollbarType get_type() const { return type_; }
+    void onMouseMove(const plug::MouseMoveEvent& event,
+                     plug::EHC& context) override;
 
    private:
-    ScrollbarBar(const ScrollbarBar& bar) = default;
-    ScrollbarBar& operator=(const ScrollbarBar& bar) = default;
-
-    ScrollbarHandle handle_;
-    Scrollbar& bar_;
-    ScrollbarType type_;
+    Vec2d old_mouse_pos_ = Vec2d(0.0, 0.0);
 };
 
-/**
- * @brief Little button at the end of the scrollbar used to shift scrollbar
- * handle up or down with clicks
- *
- */
-struct ScrollbarControlBtn : public Button {
-    ScrollbarControlBtn(Scrollbar& bar, ScrollbarButtonType type);
+struct Scrollbar : public Panel {
+    Scrollbar(ScrollbarType type, const Vec2d& center, double length,
+              const Vec2d& bind = Vec2d(0.0, 0.0));
 
-    void on_push() override;
+    void onEvent(const plug::Event& event, plug::EHC& context) override;
 
-    bool on_tick(double delta_time) override;
+    virtual void onUpdate(double value){};
 
-   private:
-    ScrollbarControlBtn(const ScrollbarControlBtn& btn) = default;
-    ScrollbarControlBtn& operator=(const ScrollbarControlBtn& btn) = default;
+    void setValue(double value);
+    double getValue() const { return value_; }
 
-    Scrollbar& bar_;
+    ScrollbarType getType() const { return type_; }
 
-    ScrollbarButtonType type_ = SCRLL_UP;
-
-    unsigned long long push_time_ = 0;
-    unsigned long long update_time_ = 0;
-};
-
-/**
- * @brief Scrollbar GUI element
- *
- */
-struct Scrollbar : Panel {
-    Scrollbar(Vec2d center, double length,
-              ScrollbarType type = SCRLLBR_VERTICAL);
-
-    virtual void on_update(double percentage) {}
-
-    double get_percentage() const;
-    void set_percentage(double percentage);
-
-    ScrollbarType get_type() const { return type_; }
-
-   protected:
-    ScrollbarType type_ = SCRLLBR_VERTICAL;
+    void setText(const char* text) { scrollbit_.setText(text); }
+    const char* getText() const { return scrollbit_.getText(); }
 
    private:
-    Scrollbar(const Scrollbar& bar) = default;
-    Scrollbar& operator=(const Scrollbar& bar) = default;
+    const ScrollbarType type_;
 
-    ScrollbarControlBtn up_btn_;
-    ScrollbarControlBtn down_btn_;
-    ScrollbarBar bar_;
+    double value_ = 0.5;
+
+    ScrollbarBtn up_btn_, down_btn_;
+    Scrollbit scrollbit_;
 };
 
 #endif

@@ -39,12 +39,15 @@ struct FilterCancelButton : Button {
 };
 
 struct FilterSettingsHolder : public Panel {
-    FilterSettingsHolder(plug::Filter& filter);
+    FilterSettingsHolder(plug::Filter& filter, FilterWindow& parent);
 
     void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
 
+    void onEvent(const plug::Event& event, plug::EHC& context) override;
+
    private:
     plug::Filter& filter_;
+    FilterWindow& parent_;
 };
 
 struct FilterWindow : public Panel {

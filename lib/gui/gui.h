@@ -110,6 +110,24 @@ struct Button : public Designable {
     DesignId design_ = DSGN_PANEL_RED;
 };
 
+enum class TextAlignment { Left, Center, Right };
+
+struct TextBlock : public Widget {
+    using Widget::Widget;
+
+    void draw(plug::TransformStack& stack, plug::RenderTarget& target) override;
+
+    const char* getText() const { return text_; }
+    void setText(const char* text) { text_ = text; }
+
+    TextAlignment getAlignment() const { return alignment_; }
+    void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
+
+   private:
+    const char* text_ = "";
+    TextAlignment alignment_ = TextAlignment::Center;
+};
+
 struct DragButton : public Button {
     DragButton(Panel& panel);
 
