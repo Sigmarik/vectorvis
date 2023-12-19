@@ -22,7 +22,7 @@ struct FilterApplyButton : Button {
     FilterApplyButton(FilterWindow& parent, const plug::LayoutBox& box)
         : Button(box), parent_(parent) {}
 
-    void onPush() override;
+    void onRelease() override;
 
    private:
     FilterWindow& parent_;
@@ -32,7 +32,7 @@ struct FilterCancelButton : Button {
     FilterCancelButton(FilterWindow& parent, const plug::LayoutBox& box)
         : Button(box), parent_(parent) {}
 
-    void onPush() override;
+    void onRelease() override;
 
    private:
     FilterWindow& parent_;
@@ -46,12 +46,15 @@ struct FilterSettingsHolder : public Panel {
     void onEvent(const plug::Event& event, plug::EHC& context) override;
 
    private:
+    plug::Transform getScalingCoords() const;
+
     plug::Filter& filter_;
     FilterWindow& parent_;
 };
 
 struct FilterWindow : public Panel {
-    FilterWindow(CanvasView& canvas_view, plug::Filter& filter);
+    FilterWindow(CanvasView& canvas_view, plug::Filter& filter,
+                 const Vec2d& position);
 
     void apply();
     void cancel();

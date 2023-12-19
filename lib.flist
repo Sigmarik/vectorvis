@@ -22,3 +22,5 @@ lib/extern/filter_palette.o
 lib/extern/tool_palette.o
 lib/extern/plugin_loader.o
 lib/hash/murmur.o
+
+plugins/widgets/line_edit.o

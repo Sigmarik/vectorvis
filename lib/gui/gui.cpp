@@ -63,6 +63,11 @@ void Panel::onMouseMove(const plug::MouseMoveEvent& event, plug::EHC& context) {
     Widget::onMouseMove(event, context);
 }
 
+void Panel::onMousePressed(const plug::MousePressedEvent& event,
+                           plug::EHC& context) {
+    context.stopped |= covers(context.stack, event.pos);
+}
+
 void Panel::addChild(plug::Widget& widget) {
     children_.push(&widget);
     widget.onParentUpdate(getLayoutBox());

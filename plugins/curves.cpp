@@ -1,4 +1,4 @@
-#include "edge_detect.h"
+#include "curves.h"
 
 #include <math.h>
 
@@ -6,10 +6,12 @@
 #include "gui/anchor.h"
 #include "widgets/line_edit.h"
 
-EdgeFilter EdgeFilter::instance_ = EdgeFilter();
-EdgeFilterData EdgeFilter::data_;
+CurvesFilter CurvesFilter::instance_ = CurvesFilter();
+CurvesFilterData CurvesFilter::data_;
+LineEdit CurvesFilter::interface_ = LineEdit(Anchor(
+    Vec2d(0.0, 0.0), Vec2d(400.0, 400.0), Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
 
-plug::Plugin* EdgeFilter::tryGetInterface(size_t interface_id) {
+plug::Plugin* CurvesFilter::tryGetInterface(size_t interface_id) {
     if (interface_id != (size_t)plug::PluginGuid::Filter) return nullptr;
 
     return &instance_;
@@ -53,28 +55,24 @@ static plug::Color edge(plug::Canvas& canvas, size_t pos_x, size_t pos_y) {
                        process_chanel(blue));
 }
 
-void EdgeFilter::applyFilter(plug::Canvas& canvas) const {
+void CurvesFilter::applyFilter(plug::Canvas& canvas) const {
     size_t width = (size_t)canvas.getSize().x;
     size_t height = (size_t)canvas.getSize().y;
 
-    plug::Color* new_data = new plug::Color[width * height];
-
     for (size_t pos_x = 0; pos_x < width; ++pos_x) {
         for (size_t pos_y = 0; pos_y < height; ++pos_y) {
-            new_data[pos_x * height + pos_y] = edge(canvas, pos_x, pos_y);
+            plug::Color color = canvas.getPixel(pos_x, pos_y);
+
+            color.r = interface_.getValue(color.r);
+            color.g = interface_.getValue(color.g);
+            color.b = interface_.getValue(color.b);
+
+            canvas.setPixel(pos_x, pos_y, color);
         }
     }
-
-    for (size_t pos_x = 0; pos_x < (size_t)canvas.getSize().x; ++pos_x) {
-        for (size_t pos_y = 0; pos_y < (size_t)canvas.getSize().y; ++pos_y) {
-            canvas.setPixel(pos_x, pos_y, new_data[pos_x * height + pos_y]);
-        }
-    }
-
-    delete new_data;
 }
 
 plug::Plugin* loadPlugin(void) {
-    static EdgeFilter instance;
+    static CurvesFilter instance;
     return &instance;
 }

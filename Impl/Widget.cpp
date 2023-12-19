@@ -27,7 +27,7 @@ void Widget::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     vertices[4] = vertices[0];
 
     for (size_t id = 0; id < vertices.getSize(); ++id) {
-        vertices[id].color = plug::Color(255, 0, 255, 255);
+        vertices[id].color = plug::Color(255, 128, 0, 255);
     }
 
     target.draw(vertices);

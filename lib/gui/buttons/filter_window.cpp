@@ -2,25 +2,32 @@
 
 #include "gui/anchor.h"
 
-FilterWindow::FilterWindow(CanvasView& canvas_view, plug::Filter& filter)
-    : Panel(Anchor(canvas_view.getCanvas().getSize() / 2.0,
-                   (filter.getWidget() != nullptr
-                        ? filter.getWidget()->getLayoutBox().getSize() / 50.0
-                        : Vec2d(500.0, 500.0)) +
-                       Vec2d(0.0, 100.0),
-                   Vec2d(0.0, 0.0), Vec2d(0.0, 0.0))),
+static const double UNIT_SIZE = 50.0;
+
+FilterWindow::FilterWindow(CanvasView& canvas_view, plug::Filter& filter,
+                           const Vec2d& position)
+    : Panel(
+          Anchor(position,
+                 (filter.getWidget() != nullptr
+                      ? filter.getWidget()->getLayoutBox().getSize() / UNIT_SIZE
+                      : Vec2d(7.0, 7.0)) +
+                     Vec2d(0.5, 1.25),
+                 Vec2d(0.0, 0.0), Vec2d(0.0, 0.0))),
       canvas_(canvas_view),
       filter_(filter),
-      apply_btn_(*this, Anchor(Vec2d(-100.0, 50.0), Vec2d(175.0, 50.0),
+      apply_btn_(*this, Anchor(Vec2d(-0.65, 0.5), Vec2d(1.2, 0.5),
                                ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5),
                                ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5))),
-      cancel_btn_(*this, Anchor(Vec2d(100.0, 50.0), Vec2d(175.0, 50.0),
+      cancel_btn_(*this, Anchor(Vec2d(0.65, 0.5), Vec2d(1.2, 0.5),
                                 ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5),
                                 ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5))),
       filter_view_(filter, *this) {
     addChild(apply_btn_);
     addChild(cancel_btn_);
     addChild(filter_view_);
+
+    apply_btn_.setText("ok");
+    cancel_btn_.setText("cancel");
 }
 
 void FilterWindow::apply() {
@@ -30,18 +37,16 @@ void FilterWindow::apply() {
 
 void FilterWindow::cancel() { setActive(false); }
 
-void FilterApplyButton::onPush() { parent_.apply(); }
+void FilterApplyButton::onRelease() { parent_.apply(); }
 
-void FilterCancelButton::onPush() { parent_.cancel(); }
-
-static const double UNIT_SIZE = 50.0;
+void FilterCancelButton::onRelease() { parent_.cancel(); }
 
 FilterSettingsHolder::FilterSettingsHolder(plug::Filter& filter,
                                            FilterWindow& parent)
     : Panel(
-          Anchor(Vec2d(0.0, 0.0),
+          Anchor(Vec2d(0.0, 0.5),
                  filter.getWidget() == nullptr
-                     ? Vec2d(3.0, 3.0)
+                     ? Vec2d(7.0, 7.0)
                      : filter.getWidget()->getLayoutBox().getSize() / UNIT_SIZE,
                  Vec2d(0.0, 0.0), Vec2d(0.0, 0.0))),
       filter_(filter),
@@ -49,16 +54,30 @@ FilterSettingsHolder::FilterSettingsHolder(plug::Filter& filter,
 
 void FilterSettingsHolder::draw(plug::TransformStack& stack,
                                 plug::RenderTarget& target) {
-    if (filter_.getWidget() != nullptr) {
-        stack.enter(getLocalCoords());
-        filter_.getWidget()->draw(stack, target);
+    Panel::draw(stack, target);
+
+    plug::Widget* widget = filter_.getWidget();
+    if (widget != nullptr) {
+        stack.enter(getScalingCoords());
+        widget->draw(stack, target);
         stack.leave();
     }
-
-    Panel::draw(stack, target);
 }
 
 void FilterSettingsHolder::onEvent(const plug::Event& event,
                                    plug::EHC& context) {
-    // TODO: Implement
+    plug::Widget* widget = filter_.getWidget();
+    if (widget != nullptr) {
+        context.stack.enter(getScalingCoords());
+        widget->onEvent(event, context);
+        context.stack.leave();
+        getLayoutBox().setSize(widget->getLayoutBox().getSize() / UNIT_SIZE);
+    }
+
+    Panel::onEvent(event, context);
+}
+
+plug::Transform FilterSettingsHolder::getScalingCoords() const {
+    return plug::Transform(getLayoutBox().getPosition(),
+                           Vec2d(1.0, 1.0) / UNIT_SIZE);
 }

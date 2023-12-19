@@ -42,6 +42,9 @@ struct Panel : public Designable {
     void onMouseMove(const plug::MouseMoveEvent& event,
                      plug::EHC& context) override;
 
+    void onMousePressed(const plug::MousePressedEvent& event,
+                        plug::EHC& context) override;
+
     void addChild(plug::Widget& widget);
 
     void onParentUpdate(const plug::LayoutBox& parent_box) override;

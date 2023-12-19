@@ -76,6 +76,7 @@ void CanvasView::onMousePressed(const plug::MousePressedEvent& event,
 
     if (context.stopped) return;
     if (context.overlapped) return;
+    if (filter_view_) return;
 
     if (!covers(context.stack, event.pos)) {
         return;
@@ -105,6 +106,8 @@ void CanvasView::onMousePressed(const plug::MousePressedEvent& event,
 void CanvasView::onMouseReleased(const plug::MouseReleasedEvent& event,
                                  plug::EHC& context) {
     Vec2d pos = getPixelPos(event.pos, context.stack);
+
+    if (filter_view_) return;
 
     plug::ControlState state =
         (plug::ControlState){.state = plug::State::Released};

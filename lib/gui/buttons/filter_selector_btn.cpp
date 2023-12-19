@@ -7,7 +7,7 @@ FilterSelectionButton::FilterSelectionButton(size_t id, CanvasView& view,
     : Button(box),
       id_(id),
       canvas_(view),
-      filter_view_(view, FilterPalette::getFilter(id)) {}
+      filter_view_(view, FilterPalette::getFilter(id), Vec2d(0.0, 0.0)) {}
 
 void FilterSelectionButton::onPush() {
     FilterPalette::setActive((unsigned)id_);
