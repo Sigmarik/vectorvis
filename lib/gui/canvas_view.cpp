@@ -16,14 +16,20 @@ void CanvasView::draw(plug::TransformStack& stack, plug::RenderTarget& target) {
     vertices[2].position = getCorner(Corner::BottomRight, stack);
     vertices[3].position = getCorner(Corner::BottomLeft, stack);
 
-    vertices[0].tex_coords = Vec2d(0.0, 0.0);
-    vertices[1].tex_coords = Vec2d(1.0, 0.0);
-    vertices[2].tex_coords = Vec2d(1.0, 1.0);
-    vertices[3].tex_coords = Vec2d(0.0, 1.0);
+    plug::Transform cv_tform = getCanvasCoords();
+
+    vertices[0].tex_coords =
+        cv_tform.restore(getAbsCorner(Corner::TopLeft)) / canvas_.getSize();
+    vertices[1].tex_coords =
+        cv_tform.restore(getAbsCorner(Corner::TopRight)) / canvas_.getSize();
+    vertices[2].tex_coords =
+        cv_tform.restore(getAbsCorner(Corner::BottomRight)) / canvas_.getSize();
+    vertices[3].tex_coords =
+        cv_tform.restore(getAbsCorner(Corner::BottomLeft)) / canvas_.getSize();
 
     target.draw(vertices, canvas_.getTexture());
 
-    stack.enter(getCanvasCoords());
+    stack.enter(cv_tform);
 
     plug::Tool& tool = ToolPalette::getTool();
 
@@ -170,10 +176,13 @@ void CanvasView::onKeyboardPressed(const plug::KeyboardPressedEvent& event,
 void CanvasView::onKeyboardReleased(const plug::KeyboardReleasedEvent& event,
                                     plug::EHC& context) {}
 
+static const double SCALE = 2.0;
+
 plug::Transform CanvasView::getCanvasCoords() const {
-    return plug::Transform(
-        getLayoutBox().getSize() * Vec2d(-0.5, 0.5),
-        getLayoutBox().getSize() / canvas_.getSize() * Vec2d(1.0, -1.0));
+    return plug::Transform(getLayoutBox().getSize() *
+                               (Vec2d(-0.5, 0.5) + scroll_ * Vec2d(-1.0, 1.0)),
+                           getLayoutBox().getSize() / canvas_.getSize() *
+                               Vec2d(1.0, -1.0) * SCALE);
 }
 
 Vec2d CanvasView::getPixelPos(const Vec2d& screen_pos,
@@ -183,4 +192,17 @@ Vec2d CanvasView::getPixelPos(const Vec2d& screen_pos,
     Vec2d local_pos = stack.restore(pos);
 
     return getCanvasCoords().restore(local_pos);
+}
+
+void CanvasScroller::onUpdate(double value) {
+    switch (getType()) {
+        case ScrollbarType::Horizontal: {
+            canvas_.setScroll(Vec2d(value, canvas_.getScroll().y));
+        } break;
+        case ScrollbarType::Vertical: {
+            canvas_.setScroll(Vec2d(canvas_.getScroll().x, 1.0 - value));
+        } break;
+        default:
+            break;
+    }
 }

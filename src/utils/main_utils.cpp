@@ -301,13 +301,22 @@ void build_gui(Panel& root) {
         tool.setColorPalette(palette);
     }
 
-    static Panel canvas_frame(Anchor(Vec2d(0.0, 0.0), Vec2d(13.0, 13.0),
+    static Panel canvas_frame(Anchor(Vec2d(0.0, 0.0), Vec2d(14.0, 14.0),
                                      Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)));
-    static CanvasView canvas_view(Anchor(Vec2d(0.0, 0.0), Vec2d(12.0, 12.0),
+    static CanvasView canvas_view(Anchor(Vec2d(-0.25, 0.25), Vec2d(12.0, 12.0),
                                          Vec2d(0.0, 0.0), Vec2d(0.0, 0.0)),
                                   canvas);
+
     canvas_frame.addChild(canvas_view);
+
     static DragButton canvas_drag(canvas_frame);
+    static CanvasScroller scroller_h(canvas_view, ScrollbarType::Horizontal,
+                                     Vec2d(-0.25, -6.0), 12.0);
+    static CanvasScroller scroller_v(canvas_view, ScrollbarType::Vertical,
+                                     Vec2d(6.0, 0.25), 12.0);
+    canvas_frame.addChild(scroller_h);
+    canvas_frame.addChild(scroller_v);
+
     canvas_frame.addChild(canvas_drag);
 
     //* SIDE PANEL

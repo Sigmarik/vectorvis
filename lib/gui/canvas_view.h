@@ -15,6 +15,7 @@
 #include "Impl/Canvas/Canvas.h"
 #include "Impl/Tool/ColorPalette.h"
 #include "Impl/Widget.h"
+#include "scrollbar.h"
 
 struct FilterWindow;
 
@@ -49,6 +50,9 @@ struct CanvasView : public Widget {
     void setFilterView(FilterWindow& view) { filter_view_ = &view; }
     void hideFilterView() { filter_view_ = nullptr; }
 
+    void setScroll(const Vec2d& scroll) { scroll_ = scroll; }
+    Vec2d getScroll() const { return scroll_; }
+
    private:
     plug::Transform getCanvasCoords() const;
 
@@ -58,7 +62,20 @@ struct CanvasView : public Widget {
     Canvas& canvas_;
     ColorPalette palette_ = ColorPalette();
 
+    Vec2d scroll_ = Vec2d(0.5, 0.5);
+
     FilterWindow* filter_view_ = nullptr;
+};
+
+struct CanvasScroller : public Scrollbar {
+    CanvasScroller(CanvasView& canvas, ScrollbarType type, const Vec2d& center,
+                   double length)
+        : Scrollbar(type, center, length), canvas_(canvas){};
+
+    void onUpdate(double value) override;
+
+   private:
+    CanvasView& canvas_;
 };
 
 #endif
