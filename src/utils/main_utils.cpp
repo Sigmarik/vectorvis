@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include "cstring"
 #include "extern/filter_palette.h"
 #include "extern/tool_palette.h"
 #include "gui/buttons/color_picker.h"
@@ -256,6 +257,32 @@ static void construct_tool_list(Panel& holder) {
     }
 }
 
+static void construct_tool_palette(Panel& holder) {
+    plug::LayoutBox& box = holder.getLayoutBox();
+
+    for (size_t id = 0; id < ToolPalette::size(); ++id) {
+        const plug::PluginData* data = ToolPalette::getTool(id).getPluginData();
+
+        double width = holder.getLayoutBox().getSize().x;
+        double height = -(double)id * width - width / 2.0;
+
+        ToolSelectionButton* button = new ToolSelectionButton(
+            id, Anchor(Vec2d(0.0, height), Vec2d(width, width),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5),
+                       ANCHOR_DEFINITION_SIZE * Vec2d(0.0, 0.5)));
+
+        char* preview = new char[3];
+        strcpy(preview, "UT");
+        if (data != nullptr && strlen(data->getName()) >= 2) {
+            strncpy(preview, data->getName(), 2);
+        }
+
+        button->setText(preview);
+
+        holder.addChild(*button);
+    }
+}
+
 static void construct_filter_list(Panel& holder, CanvasView& view) {
     plug::LayoutBox& box = holder.getLayoutBox();
 
@@ -319,7 +346,13 @@ void build_gui(Panel& root) {
 
     canvas_frame.addChild(canvas_drag);
 
-    //* SIDE PANEL
+    //* SIDE PANELS
+    static Panel tool_panel(Anchor(
+        Vec2d(0.75 / 2.0, 0.0), Vec2d(0.75, ANCHOR_DEFINITION_SIZE.y - 0.5),
+        ANCHOR_DEFINITION_SIZE * Vec2d(-0.5, -0.5),
+        ANCHOR_DEFINITION_SIZE * Vec2d(-0.5, 0.5) + Vec2d(0.0, -0.5)));
+    construct_tool_palette(tool_panel);
+
     static Panel side_panel(
         Anchor(Vec2d(-1.5, 0.0), Vec2d(3.0, ANCHOR_DEFINITION_SIZE.y - 0.5),
                ANCHOR_DEFINITION_SIZE * Vec2d(0.5, -0.5),
@@ -382,6 +415,7 @@ void build_gui(Panel& root) {
 
     //* REGISTRATION
     root.addChild(canvas_frame);
-    root.addChild(top_menu);
     root.addChild(side_panel);
+    root.addChild(tool_panel);
+    root.addChild(top_menu);
 }
