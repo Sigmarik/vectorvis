@@ -69,6 +69,8 @@ struct FilterWindow : public Panel {
     CanvasView& canvas_;
     plug::Filter& filter_;
 
+    DragButton window_drag_;
+
     FilterApplyButton apply_btn_;
     FilterCancelButton cancel_btn_;
 

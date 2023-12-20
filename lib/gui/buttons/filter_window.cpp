@@ -11,10 +11,11 @@ FilterWindow::FilterWindow(CanvasView& canvas_view, plug::Filter& filter,
                  (filter.getWidget() != nullptr
                       ? filter.getWidget()->getLayoutBox().getSize() / UNIT_SIZE
                       : Vec2d(7.0, 7.0)) +
-                     Vec2d(0.5, 1.25),
+                     Vec2d(0.5, 1.6),
                  Vec2d(0.0, 0.0), Vec2d(0.0, 0.0))),
       canvas_(canvas_view),
       filter_(filter),
+      window_drag_(*this),
       apply_btn_(*this, Anchor(Vec2d(-0.65, 0.5), Vec2d(1.2, 0.5),
                                ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5),
                                ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5))),
@@ -22,10 +23,12 @@ FilterWindow::FilterWindow(CanvasView& canvas_view, plug::Filter& filter,
                                 ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5),
                                 ANCHOR_DEFINITION_SIZE * Vec2d(0.0, -0.5))),
       filter_view_(filter, *this) {
+    addChild(window_drag_);
     addChild(apply_btn_);
     addChild(cancel_btn_);
     addChild(filter_view_);
 
+    window_drag_.setText(filter.getPluginData()->getName());
     apply_btn_.setText("ok");
     cancel_btn_.setText("cancel");
 }
@@ -44,7 +47,7 @@ void FilterCancelButton::onRelease() { parent_.cancel(); }
 FilterSettingsHolder::FilterSettingsHolder(plug::Filter& filter,
                                            FilterWindow& parent)
     : Panel(
-          Anchor(Vec2d(0.0, 0.5),
+          Anchor(Vec2d(0.0, 0.25),
                  filter.getWidget() == nullptr
                      ? Vec2d(7.0, 7.0)
                      : filter.getWidget()->getLayoutBox().getSize() / UNIT_SIZE,
